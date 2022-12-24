@@ -18,7 +18,7 @@ class Ajuste:
         -n: int: orden del ajuste lineal.
         -ordenada: bool: si queremos o no obtener la ordenada del ajuste.
         '''
-        # Get righy dimensions
+        # Get right dimensions
         if x.ndim == 1:
             self.x = x.reshape(-1,1)
         else:
@@ -27,10 +27,23 @@ class Ajuste:
             self.y = y.reshape(-1,1)
         else:
             self.y = y
-        if cov_y is not None and cov_y.ndim != 2:
+        
+        # Determina la matriz de covarianza y el sigma:       
+        if cov_y is None:
+            # Es la identidad:
+            self.cov_y = np.identity(len(self.y))
+            self.sigma_y = np.sqrt(np.diag(cov_y))
+
+        elif cov_y.ndim != 2:
             raise ValueError("Passed array is not of the right shape. It should be a (len(y), len(y)) shaped array.")
-        self.cov_y = cov_y
-        self.sigma_y = None
+        
+        if cov_y.shape[1] == 1:
+            self.cov_y = np.diag(cov_y.reshape(-1)**2)
+            self.sigma_y = cov_y
+        else:
+            self.cov_y = cov_y
+            self.sigma_y = np.sqrt(np.diag(cov_y))
+
         self.y_modelo = None
         self.vander = None
         self.parametros = None
@@ -68,12 +81,6 @@ class Ajuste:
         absolute_sigma = False: # usar sólo en caso de que este en las mismas unidades (es decir no hay repetidos valores sobre la misma medicion. GGOOGLEAR)
         check_finite = True: # chequea que no haya nans o infs
         '''        
-        # Determina la matriz de covarianza y el sigma:       
-        if self.cov_y is None:
-            # es la identidad:
-            self.cov_y = np.identity(len(self.y)) 
-        self.sigma_y = np.sqrt(np.diag(self.cov_y).reshape(-1,1))
-
         # Chequea que el modelo especificado exista:
         if modelo in Ajuste.modelos:
             pass
@@ -263,7 +270,7 @@ if __name__ == '__main__':
     # EJEMPLO 1D:
     x = np.linspace(0,100,40)
     y = 1 + 2*np.sin(0.1*x)*np.exp(-.5*x)
-    sigma = .01
+    sigma = .001
     signal = np.random.normal(y, sigma, size = y.shape)
     # def func(x, b, a, w):
     #     return b + a*np.sin(x*w)
@@ -274,7 +281,7 @@ if __name__ == '__main__':
     # Propagacion_errores(variables = variables, errores = aj.cov_parametros, formula = aux).fit()[1]
 
 
-    aj = Ajuste(x, signal)
+    aj = Ajuste(x, signal, cov_y = np.array([sigma for i in x]).reshape(-1,1))
     aj.fit(modelo='curve_fit', expr = expr, p0 = [1.6, 2.6, 6/50,-.7])
     # aj.parametros, aj.cov_parametros
     aj.bondad()

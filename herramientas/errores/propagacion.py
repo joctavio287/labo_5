@@ -1,24 +1,38 @@
 import numpy as np
-from sympy import symbols,lambdify,diff,sqrt,sin,exp,cos
+from sympy import symbols, lambdify, diff
+
+# Sí, una lista enorme de funciones.
+from sympy import log, sin, exp, cos, tan, sqrt, pi, atan, asin, acos, Abs, cot, sec, csc, sinc, acot, asec, acsc, atan2, sinh, cosh, tanh, coth, sech, csch, asinh, acosh, atanh, acoth, asech, root
 
 class Propagacion_errores:
 
-    def __init__(self, variables: list, errores: np.array, formula:str) -> None:
+    def __init__(self, formula:str, variables: list, errores: np.array) -> None:
         '''
         INPUT: 
-        -data --> dict: es un diccionario con dos keys: 
+        -formula: str: la fórmula de la variable cuyo error se quiere propagar. Esta debe usar exclu
+        sivamente la librería de sympy para funciones especiales (sin, cos, etc.). A continuación de
+        jo una lista con las funciones incluidas: pi, log, sin, exp, cos, tan, sqrt, atan, asin, aco
+        s, Abs, cot, sec, csc, sinc, acot, asec, acsc, atan2, sinh, cosh, tanh, coth, sech, csch, as
+        inh, acosh, atanh, acoth, asech, root. De querer usar otras que estén incluidas dentro de la
+        librería agregarlas manualmente en el import.
         
-            *'variables'--> list de tuples de tres elementos (es necesario pasar 
-            tres elementos aunque no haya errores para dicha variable): (simbolo de la variable, valor).
-        
-            *'expr'--> str: formula
-        -covarianza --> np.array of shape n x n, donde n es la cantidad de variables
-        '''
-        self.variables = variables
+        -variables: list: es una lista de tuplas de dos elementos. Cada tupla esta compuesta por dos
+        valores. El primer valor es un str cuyo símbolo representa a cada variable (se debe respetar
+        las mismas variables usadas en la fórmula).
 
-        # Si se pasa un array de errores, armo la matriz de covarianza. En el caso contrario, armo los errores:
+        -cov_y: np.array: matriz de covarianza de las variables. También es posible pasar un array c
+        on las desviaciones estándar de cada dato. Si este es el caso, la matriz de covarianza se co
+        nstruira automáticamente.
+        '''
+        # Variables importantes e hiperparámetros usados dentro de la clase
+        self.formula = formula
+        self.variables = variables
+        self.valor = None
+        self.error = None
+        
+        # Determina la matriz de covarianza:
         if errores.ndim != 2:
-            raise ValueError("Passed array is not the right shape. It should be a (len(variables), 1) shaped array if sigma of variables was provided or a (len(variables), len(variables)) if a covariance matrix is passed.")
+            raise ValueError("El array que se paso no tiene las dimensiones requeridas.\n Debería tener dimensiones (len(variables), len(variables)) ó (len(variables), 1) si se pasan desviaciones estándar.")
 
         if errores.shape[1] == 1:
             self.covarianza = np.diag(errores.reshape(-1)**2)
@@ -26,32 +40,37 @@ class Propagacion_errores:
         else:
             self.covarianza = errores
             self.errores = np.sqrt(np.diag(errores))
-        self.formula = formula
-        self.valor = None
-        self.error = None
-  
 
     def __str__(self):
+        '''
+        Si se ejecuta 'print(instancia de la clase)' ó 'str(instancia)' se correrá esta función. Sir
+        ve para dar información respecto a lo que ya corrio la instancia.
+        '''
         texto  = f'El valor obtenido es: ({self.valor} ± {self.error})'
         print(texto)
         return texto
     
-    # @classmethod
+    # @classmethod #TODO: implementar distinta forma de llamar
     # def without_variables(cls, variables_value, formula, errores):
     #     variables = [(f'a_{i}', variables_value[i]) for i in range(len(variables_value))]
     #     return cls(variables = variables, errores = errores, formula = formula)
 
     def fit(self):
         '''
-        OUTPUT:
-        Actualiza los valores de self.valor y self.error.
+        Calcula el error propagado y el valor de la magnitud de interés.
+        
+        OUTPUT: tupla con dos valores.
+        -self.valor: np.float64: valor de la cantidad pasada en la fórmula.
+        
+        -self.error: np.float64: error (raíz cuadrada de varianza) propagado de la cantidad pasada e
+        n la fórmula.
         '''
         simbolos = [i for i,j in self.variables]
         valores = [j for i,j in self.variables]
         
         # Defino como símbolos las variables de las cuales depende la expresión:
         for sim in simbolos:
-            globals()[sim] = symbols(sim, real = True)
+            locals()[sim] = symbols(sim, real = True)
 
         # Defino la expresión simbólica:
         formula = eval(self.formula)
@@ -73,16 +92,16 @@ class Propagacion_errores:
 if __name__ == '__main__':
     # Prueba regresión lineal
     # INPUT
+    expr = 'A*cos(f*t) + C'    
     variables = [
-        ('f', 14.78), 
-        ('a',-.052710), 
-        ('d',5/1000),
-        ('m',88.85/1000), 
-        ('l',.36)]
-    errores = np.array([0,.00009, 0.05/1000, .01/1000, 1/1000]).reshape(-1,1)
-    expr = '((f**2)*4*np.pi**2+a**2)/((((np.pi*(d)**4)/64)/(m/l)*4.934484391**4))'    
-
-    propaga = Propagacion_errores(variables = variables, formula = expr, errores = errores)
-    propaga.fit()
+        ('f', 100), # Hz
+        ('A', 2), # Volts
+        ('t', 1), # s
+        ('C', .5), # Volts
+        ]
+    errores = np.array([0.0005, .0001, 0, .0001]).reshape(-1,1) # Notar que al tiempo no le asigne error
+    propaga = Propagacion_errores(formula = expr, variables = variables, errores = errores)
+    valor, error = propaga.fit()
+    print(valor, error)
 
 

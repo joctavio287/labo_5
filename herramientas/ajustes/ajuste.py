@@ -63,8 +63,8 @@ class Ajuste:
     
     def __str__(self):
         '''
-        Si se ejecuta 'print(instancia de la clase)' ó 'str(instancia)' se correrá esta función. 
-        Sirve para dar información respecto a lo que ya corrio la instancia.
+        Si se ejecuta 'print(instancia de la clase)' ó 'str(instancia)' se correrá esta función. Sir
+        ve para dar información respecto a lo que ya corrio la instancia.
         '''
         texto  = f'Ajuste lineal:\n -Parámetros de ajuste: {self.parametros}.\n'
         texto += f' -Matriz de covarianza de los parámetros: {self.cov_parametros}.\n'
@@ -188,29 +188,29 @@ class Ajuste:
         Calcula coeficientes para determinar la bondad del ajuste: r, R^2, Xi^2 y Xi^2 reducido.
 
         - La correlación lineal (r) me habla de qué tan determinadas están unas variables respecto a
-        las otras. r(x,y) := cov(x,y)/sigma(x)*sigma(y) y -1 < r < 1. 
-        Si r = 1 las variables están correlacionadas (i.e: cuando una crece, la otra también), si
-        r = -1 las variables están anticorrelacionadas (i.e: cuando una crece, la otra decrece); 
-        si r=0 no están correlacionadas.
-        Lo que devuelve este método es la matriz de correlación entre las variables x e y. Es decir
-        r(x,x), r(x,y) = r(y,x) y r(y,y). Obviamente el dato interesante es el simétrico (es el que se
-        reporta).
+        las otras. r(x,y) := cov(x,y)/sigma(x)*sigma(y) con -1 < r < 1. Si r = 1 las variables están
+        correlacionadas (i.e: cuando una crece, la otra también), si r = -1 las variables están anti
+        correlacionadas (i.e: cuando una crece, la otra decrece); si r = 0 no están correlacionadas.
 
-        - El coeficiente de determinación (R^2) determina la variación de los resultados que puede explicarse
-        por el modelo. Básicamente da una noción de si el ajuste cae o no dentro del error de los datos.
-        En el caso de un ajuste lineal, el r(x,y) coincide con el R^2.
+        Lo que devuelve este método es la matriz de correlación entre las variables x e y. Es decir,
+        r(x,x), r(x,y) = r(y,x) y r(y,y). Obviamente, el dato interesante es el que está fuera de la
+        diagonal (es el que se reporta).
+
+        - El coeficiente de determinación (R^2) determina la varianza en los resultados que puede ex
+        plicarse con el modelo propuesto. Básicamente da una noción de si el ajuste cae o no dentro 
+        del error de los datos. En el caso de un ajuste lineal, el r(x,y) coincide con el R^2.
         
-        - El estadístico Chi cuadrado sirve para testear que los datos siguen una distribución gaussiana con
-        media en los datos adquiridos. La idea es contrastar su valor con su esperanza. Un valor alto podría 
-        indicar errores subestimados o que los datos no siguen la distribución especificada. Mientras que un
-        valor bajo podría indicar que los errores están sobre estimados. Se tiene que 
-        E(Xi^2) = (# de datos - # parametros ajustados) 
-        Sigma(Xi^2) = sqrt(2(# de datos - # parametros ajustados)).
+        - El estadístico Chi cuadrado (Xi^2) sirve para testear que los datos siguen una distribución
+        gaussiana cuya media en los datos adquiridos. La idea es contrastarlo contra su esperanza. Un 
+        valor alto podría indicar errores subestimados o que los datos no siguen la distribución espe
+        cificada. Mientras que un valor bajo podría indicar que los errores están sobre estimados. 
+        ---> E(Xi^2) = (# de datos - # parametros ajustados) 
+        ---> Sigma(Xi^2) = sqrt(2(# de datos - # parametros ajustados)).
         
-        - La idea con el Chi cuadrado reducido es la misma, pero su valor es más acotado, puesto que va norma
-        lizado por su esperanza
-        E(Xi_r^2) ~ 1
-        Sigma(Xi_r^2) = sqrt(2)/(# de datos - # parametros ajustados)**(3/2).
+        - La idea con el Chi cuadrado reducido (Xi^2 reducido) es la misma, pero su valor es más acot
+        ado, puesto que por definición va normalizado por la esperanza de la Xi^2.
+        ---> E(Xi_r^2) ~ 1
+        ---> Sigma(Xi_r^2) = sqrt(2)/(# de datos - # parametros ajustados)**(3/2).
         '''    
         # Matriz de correlación lineal de los datos
         self.r = np.corrcoef(self.x.flatten(), self.y.flatten())

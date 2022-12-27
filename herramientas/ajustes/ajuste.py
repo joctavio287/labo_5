@@ -303,6 +303,7 @@ class Ajuste:
         INPUT:
         expr: str: formula de la función a fittear.
         '''
+        #TODO: [a-z]\_\d regular expression para vualquier letra seguida de '_numero'
         n_vars = [f'a_{i}' for i in range(expr.count('a_'))]
         n_vars = ['x_'] + n_vars
         args = ', '.join(n_vars)

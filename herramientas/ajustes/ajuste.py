@@ -303,7 +303,10 @@ class Ajuste:
         INPUT:
         expr: str: formula de la función a fittear.
         '''
-        n_vars = [f'a_{i}' for i in range(expr.count('a_'))]
+        if 'lambda' in expr:
+            n_vars = [f'a_{i}' for i in range(expr.split('lambda')[1].count('a_'))]
+        else:
+            n_vars = [f'a_{i}' for i in range(expr.count('a_'))]
         n_vars = ['x_'] + n_vars
         args = ', '.join(n_vars)
         expresion = expr

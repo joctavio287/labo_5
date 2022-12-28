@@ -1,0 +1,3 @@
+base_path: 'C:/repos/labo_5/' #FIXME TO ANY COMPUTER
+input: 'input/ferromagnetismo/mediciones/'
+output: 'output/ferromagnetismo/'

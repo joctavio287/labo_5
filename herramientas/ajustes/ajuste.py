@@ -303,6 +303,7 @@ class Ajuste:
         INPUT:
         expr: str: formula de la función a fittear.
         '''
+        #TODO: [a-z]\_\d regular expression para vualquier letra seguida de '_numero'
         if 'lambda' in expr:
             n_vars = [f'a_{i}' for i in range(expr.split('lambda')[1].count('a_'))]
         else:

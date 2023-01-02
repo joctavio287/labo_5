@@ -34,6 +34,11 @@ conversor_r_t = {r: t for r, t in zip(funcion_conversora_temp(temperaturas_auxil
 # son la 12, 13, 14, 15 y 16. A las tensiones les quito el offset y les aplico un filtro sa
 # vgol.
 # =========================================================================================
+
+# Errores en las esclas de tensión acorde a c/ medición
+errores = {'medicion_12_c1':8*.5/256, 'medicion_13_c1':8*.5/256, 'medicion_14_c1':8/256, 'medicion_15_c1':8*2/256, 'medicion_16_c1':8*2/256,'medicion_12_c2':8*.2/256, 'medicion_13_c2':8*.2/256, 'medicion_14_c2':8*.2/256, 'medicion_15_c2':8*.5/256, 'medicion_16_c2':8*.5/256}
+
+# Elijo la medición
 medicion = 16
 
 file_resistencias = variables['base_path'] + variables['input'] + f'Medicion {medicion} - Resistencias.txt'
@@ -43,28 +48,20 @@ tiempo = np.array(resistencia[1])
 
 # Armo un iterador. Cada valor es el índice de la medición
 iterador = np.arange(1, len(temperatura) + 1)
-window = 11
 
+# Defino un diccionario con las mediciones
 globals()[f'medicion_{medicion}'] = {}
-globals()[f'medicion_{medicion}_{window}'] = {}
+
 for j in iterador:
     # j es el indice del diccionario, se corresponde con cada medición
     if j%25 == 0:
         print(j)
     CH1 = np.loadtxt(variables['base_path'] + variables['input'] + f'/Medicion {medicion} - CH1 - Resistencia {j}.0.txt', delimiter = ',', dtype = float)
     CH2 = np.loadtxt(variables['base_path'] + variables['input'] + f'/Medicion {medicion} - CH2 - Resistencia {j}.0.txt', delimiter = ',', dtype = float)
-    
-    globals()[f'medicion_{medicion}'][j] = {
-        'tiempo_r':tiempo[j-1],
-        'tiempo_r':tiempo[j-1],
-        'temperatura': temperatura[j-1],
-        'tiempo_1':CH1[0,:],
-        'tiempo_2': CH2[0,:],
-        'tension_1': CH1[1, :] - CH1[1, :].mean(),
-        'tension_2': (CH2[1, :]- CH1[1, :].mean())-(CH2[1, :]- CH1[1, :].mean()).mean()
-        }
+
     # cuando escribo los datos corrigo offsets, primero respecto al CH1 y en base a eso el CH2 y agrego filtro sav
-    globals()[f'medicion_{medicion}_{window}'][j] = {
+    window = 11
+    globals()[f'medicion_{medicion}'][j] = {
         'tiempo_r':tiempo[j-1],
         'tiempo_r':tiempo[j-1],
         'temperatura': temperatura[j-1],
@@ -116,42 +113,6 @@ for i in iterador:
     remanencia.append((np.mean([m for m in minimos_tension_2 if m >= 0]) - np.mean([m for m in minimos_tension_2 if m < 0]))/2)
 remanencia = np.array(remanencia)
 
-# # Gráfico auxiliar par ver una temperatura en particular, con su respectiva remanencia
-# t = 55
-# fig, axs = plt.subplots(nrows = 2, ncols = 1, figsize = (9,6), sharex = True, sharey = True)
-
-# axs = axs.flatten()
-# fig.supylabel(r'Tensión secundario $\propto B$ [V]', fontsize = 12)
-# fig.supxlabel(r'Tensión primario $\propto H$ [V]', fontsize = 12)
-
-# # Sin filtro
-# med = eval(f'medicion_{medicion}')[t]
-# axs[0].scatter(med['tension_1'], med['tension_2'], s = 2, label = f'Sin filtro')
-# axs[0].legend(fontsize = 12)
-# axs[0].grid()
-
-# # Con filtro de ventana window
-# med_w = eval(f'medicion_{medicion}_{window}')[t]
-# axs[1].scatter(med_w['tension_1'], med_w['tension_2'], s = 2, label = f'Filtro con ventana de {window} datos', color = 'orange')
-# axs[1].legend(fontsize = 12)
-# axs[1].grid()
-
-# fig.subplots_adjust( 
-# left  = 0.1,  # the left side of the subplots of the figure
-# right = 0.99,    # the right side of the subplots of the figure, as a fraction of the figure width
-# bottom = 0.12,   # the bottom of the subplots of the figure
-# top = 0.99,      # the top of the subplots of the figure
-# wspace = 0.05,   # the amount of width reserved for blank space between subplots
-# hspace = 0.05)   # the amount of height reserved for white space between subplots
-# fig.show()
-
-def ajuste(t, t_0, a, g, c):
-    return np.piecewise(t, [t < t_0, t >= t_0], [lambda t: a*np.abs(t-t_0)**(g) + c, c])
-    # return np.piecewise(t, [t < t_0, t >= t_0], [lambda t: a*(t-t_0)**(g) + c, c])
-
-# Errores en las esclas de tensión acorde a c/ medicion:
-errores = {'medicion_12_c1':8*.5/256, 'medicion_13_c1':8*.5/256, 'medicion_14_c1':8/256, 'medicion_15_c1':8*2/256, 'medicion_16_c1':8*2/256,'medicion_12_c2':8*.2/256, 'medicion_13_c2':8*.2/256, 'medicion_14_c2':8*.2/256, 'medicion_15_c2':8*.5/256, 'medicion_16_c2':8*.5/256}
-
 # Estoy haciendo la resta entre dos valores del canal 2, entonces aparece el factor sqrt(2):
 error = np.full(len(remanencia), np.sqrt(2)*errores[f'medicion_{medicion}_c2'])
 
@@ -162,4 +123,7 @@ formula = 'np.piecewise(x_, [x_ < a_0, x_ >= a_0], [lambda x_: a_1*np.abs(x_- a_
 p_0 = [258,.05,.5,.04]
 regr = Ajuste(x = temperatura, y = remanencia, cov_y = error.reshape(-1,1))
 regr.fit(modelo = 'curve_fit', expr = formula, p0 = p_0)
-regr.graph(estilo = 'ajuste_2', label_x = 'Tempeatura [K]', label_y = r'Tensión [$\propto$ V]', alpha =1000)
+
+# TODO: el ajuste explota en la transición de la función partida
+regr.graph(estilo = 'ajuste_2', label_x = 'Tempeatura [K]', label_y = r'Tensión [$\propto$ V]', alpha = 100)
+regr.bondad()

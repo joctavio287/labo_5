@@ -225,7 +225,9 @@ class Ajuste:
 
         # Coeficiente de determinación 1 - sigma_r**2/sigma_y**2
         sigma_r = self.y - self.y_modelo
-        self.R2 = float(1 - np.dot(sigma_r.T, sigma_r)/np.dot(self.sigma_y.T, self.sigma_y))
+        ss_res = np.sum(a = sigma_r**2)
+        ss_tot = np.sum(a = (self.y - np.mean(self.y))**2) # es como el sigma_y pero experimental
+        self.R2 = 1 - (ss_res / ss_tot)
 
         # Chi^2
         self.chi_2 = np.sum(((self.y - self.y_modelo)/self.sigma_y)**2, axis = 0)

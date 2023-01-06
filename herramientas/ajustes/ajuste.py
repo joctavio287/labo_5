@@ -10,11 +10,11 @@ class Ajuste:
     def __init__(self, x: np.array, y: np.array, cov_y: np.array = None) -> None:
         '''
         INPUT: 
-        -x, y: np.arrays: son los datos para ajustar. Si hay más de una variable independiente deben
-        disponerse en unsolo array cuya dimensión deberá ser X.shape = (numero_de_datos, numero_de_v
-        ariables).
+        x, y: np.arrays: son los datos para ajustar. Si hay más de una variable independiente éstas
+        deben disponerse en un solo array cuya dimensión deberá ser X.shape = (numero_de_datos, nume
+        ro_de_variables).
 
-        -cov_y: np.array: matriz de covarianza de los datos y. También es posible pasar un array con
+        cov_y: np.array: matriz de covarianza de los datos y. También es posible pasar un array con
         las desviaciones estándar de cada dato. Si este es el caso, la matriz de covarianza se const
         ruira automáticamente. De no haber errores, por defecto se toma la identidad.
         '''
@@ -79,13 +79,14 @@ class Ajuste:
         '''
         Actualiza los coeficientes del ajuste y su matriz de covarianza acorde al modelo especificad
         o.
+
         INPUT:
         modelo: str: se deberá elegir entre 'regresion_lineal' ó 'curve_fit' de la librería scipy. S
         i se elige la última, se deberá incluir, además, el siguiente parámetro.
         
         expr: str: función de ajuste expresada como str. Es necesario que los parámetros tomen la fo
-        rma 'a_i' con i = 0, 1, 2, 3... Se debe respetar el orden en las varibles y para funciones e
-        speciales usar la libreria numpy. Ejemplo:
+        rma 'letra_i' con i = 0, 1, 2, 3... Se debe respetar el orden en las varibles y para funcion
+        es especiales usar la libreria numpy. Ejemplo:
         >> expr = 'a_0 + a_1*x**2 + np.sin(a_2*x)**3'
 
         **kwargs
@@ -156,14 +157,17 @@ class Ajuste:
     
     def regresion_lineal(self, n:int = 1, ordenada:bool = False):
         '''
-        Realiza una regresión lineal y actualiza la matriz de Vandermonde
+        Realiza una regresión lineal y actualiza la matriz de Vandermonde.
+
         INPUT:
         n: int: orden de la regresión.
+        
         ordenada: bool: si incluir o no la ordenada al origen como parámetro a determinar. Si ordena
         da=False entonces se asume que es nula.
 
         OUTPUT:
         parametros: np.array: los parámetros del ajuste.
+        
         cov_parametros: np.array: la matriz de covarianza de los parámetros del ajuste.
         '''        
         # Matriz de Vandermonde:
@@ -238,8 +242,43 @@ class Ajuste:
 
     def graph(self, estilo:str, label_x: str = 'x', label_y: str = 'y', alpha: float = 1000, save:bool = False, path:str = os.path.join(os.getcwd() + os.path.normpath('/ajuste.png'))):
         '''
-        Grafica los datos de distintas formas:
+        Grafica los datos ajustados de distintas formas.
+        -'errores': realiza un gráfico con los residuos de cada dato.
+        -'ajuste_1': realiza un gráfico del tipo errorbar con los datos y la curva del ajuste en
+        cima.
+        -'ajuste_2': realiza un gráfico del tipo errorbar con los datos y la curva del ajuste en
+        cima. Además, se incluye el error del ajuste estimado asumiendo que en cada punto los da
+        tos siguen la distribución propuesta.
+        -'slider': realiza un gráfico interactivo del ajuste en el cual se pueden variar los par
+        ámetros para ver con qué valor es conveniente inicializar el ajuste.
+
         estilos_graficos = ['ajuste_1', 'ajuste_2', 'slider', 'errores'] SLIDER NO IMPL
+                Realiza una regresión lineal y actualiza la matriz de Vandermonde.
+
+        INPUT:
+        estilo: str: qué gráfico hacer. Se puede seleccionar entre: 'ajuste_1', 'ajuste_2', 'errore
+        s' y 'slider'.
+        
+        label_x: str: nombre del label del eje horizontal.
+        
+        label_y: str: nombre del label del eje horizontal.
+        
+        alpha: float: es el factor multiplicativo con el que se genera la tira auxiliar con la cual
+        se grafica la curva del ajuste. En general si la cantidad de puntos es la misma que la cant
+        idad de datos. La linea es entrecortada y no se ve suave. Se define explícitamente como x = 
+        np.linspace(self.x[0], self.x[-1], len(self.x)*alpha). Es decir, que si alpha = 1.0, entonc
+        es la cantidad de puntos que tendrá la curva es la misma que la cantidad de datos.
+        
+        save: bool: si se guarda o no el gráfico. Por defecto se guardarán en el directorio en el c
+        ual se está ejecutando el código con el nombre 'ajuste.png'. De querer, se puede especifica
+        r el el nombre del archivo y su path con el siguiente parametro
+
+        path: str: donde y con qué nombre guardar la imagen
+
+        OUTPUT:
+        parametros: np.array: los parámetros del ajuste.
+        
+        cov_parametros: np.array: la matriz de covarianza de los parámetros del ajuste.
         '''
         # Chequeo que el estilo este dentro de los disponibles
         if estilo in Ajuste.estilos_graficos:
@@ -298,7 +337,6 @@ class Ajuste:
             variables = [(variables_nom[i], self.parametros[i]) for i in range(len(variables_nom))]
             franja_error = Propagacion_errores(variables = variables, errores = self.cov_parametros, formula = self.expr, dominio = x_auxiliar).fit()[1]
             
-            
             # Creo la figura y grafico
             fig, ax = plt.subplots(nrows = 1, ncols = 1)
             ax.scatter(x = self.x, y = self.y, s = 5, color = 'black', label = 'Datos')
@@ -316,12 +354,15 @@ class Ajuste:
                 fig.savefig(path)
             else:
                 fig.show()
+        elif estilo == 'slider':
+            raise Exception('No implementado todavía')
 
     @staticmethod
     def define_func(expr:str):
         '''
         Cuenta el numero de variables de la forma 'a_i' y defune una función con 'x' como 
         variable independiente y los 'a_i' como coeficientes.
+        
         INPUT:
         expr: str: formula de la función a fittear.
         '''        
@@ -345,7 +386,7 @@ if __name__ == '__main__':
     aj.graph(estilo = 'ajuste_1')
     aj.graph(estilo = 'errores', label_x = 'Tiempo [s]', label_y = r'Tension [$\propto V$]')
     aj.graph(estilo = 'ajuste_2', label_x = 'Tiempo [s]', label_y = r'Tension [$\propto V$]')
-
+    aj.bondad()
 
     # # EJEMPLO CON DOMINIO 2D
     # x_1 = np.linspace(0, 100, 70).reshape(-1,1)

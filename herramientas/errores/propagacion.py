@@ -8,21 +8,18 @@ class Propagacion_errores:
 
     def __init__(self, formula:str, variables: list, errores: np.array, dominio: np.array = None) -> None:
         '''
-        INPUT: #TODO FIXME CHEQUEAR LA DOCU
-        -formula: str: la fórmula de la variable cuyo error se quiere propagar. Esta debe usar exclu
-        sivamente la librería de sympy para funciones especiales (sin, cos, etc.). A continuación de
-        jo una lista con las funciones incluidas: pi, log, sin, exp, cos, tan, sqrt, atan, asin, aco
-        s, Abs, cot, sec, csc, sinc, acot, asec, acsc, atan2, sinh, cosh, tanh, coth, sech, csch, as
-        inh, acosh, atanh, acoth, asech, root. De querer usar otras que estén incluidas dentro de la
-        librería agregarlas manualmente en el import.
+        INPUT:
+        formula: str: la fórmula de la variable cuyo error se quiere propagar. Esta debe usar exclu
+        sivamente la librería de numpy o sympy para funciones especiales (np.sin, cos, etc.).
         
-        -variables: list: es una lista de tuplas de dos elementos. Cada tupla esta compuesta por dos
-        valores. El primer valor es un str cuyo símbolo representa a cada variable (se debe respetar
-        las mismas variables usadas en la fórmula).
-
-        -cov_y: np.array: matriz de covarianza de las variables. También es posible pasar un array c
-        on las desviaciones estándar de cada dato. Si este es el caso, la matriz de covarianza se co
-        nstruira automáticamente.
+        variables: list: es una lista de tuplas de dos elementos. Cada tupla esta compuesta por dos
+        valores. El primer valor es un str cuyo símbolo representa a cada variable (se debe respeta
+        r las mismas variables usadas en la fórmula).
+        
+        errores: np.array: array con los errores de cada variable o matriz de covarianza de las var
+        iables. Se debe respetar el orden pasado en 'variables' y 'formula'. Las dimensiones del ar
+        ray deben ser (cantidad_de_var, 1) o (cantidad_de_var, cantidad_de_var) si se pasa la matri
+        z de covarianza.
         '''
         # Variables importantes e hiperparámetros usados dentro de la clase
         self.formula = formula
@@ -68,9 +65,9 @@ class Propagacion_errores:
         Calcula el error propagado y el valor de la magnitud de interés.
         
         OUTPUT: tupla con dos valores.
-        -self.valor: np.float64: valor de la cantidad pasada en la fórmula.
+        self.valor: np.float64: valor de la cantidad pasada en la fórmula.
         
-        -self.error: np.float64: error (raíz cuadrada de varianza) propagado de la cantidad pasada e
+        self.error: np.float64: error (raíz cuadrada de varianza) propagado de la cantidad pasada e
         n la fórmula.
         '''
         simbolos = [i for i,j in self.variables]
@@ -118,8 +115,9 @@ class Propagacion_errores:
 
         INPUT:
         expr: str: expresión a traducir desde el paquete numpy al sympy.
+        
         OUTPUT: 
-        str: misma expresión, pero escrita en formato sympy
+        expr: str: misma expresión, pero escrita en formato sympy
         '''
         # Por si toma una función partida 
         if 'np.piecewise' in expr:

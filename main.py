@@ -1,12 +1,9 @@
-import numpy as np, pandas as pd, matplotlib.pyplot as plt, os
+import numpy as np
 from herramientas.ajustes.ajuste import Ajuste
-from herramientas.errores.propagacion import Propagacion_errores
 from herramientas.config.config_builder import Parser
 
 from scipy import interpolate
 from scipy.signal import savgol_filter
-from scipy.optimize import curve_fit
-import scipy.stats as st
 
 variables = Parser(configuration = 'ferromagnetismo').config()
 
@@ -36,11 +33,22 @@ conversor_r_t = {r: t for r, t in zip(funcion_conversora_temp(temperaturas_auxil
 # =========================================================================================
 
 # Errores en las esclas de tensión acorde a c/ medición
-errores = {'medicion_12_c1':8*.5/256, 'medicion_13_c1':8*.5/256, 'medicion_14_c1':8/256, 'medicion_15_c1':8*2/256, 'medicion_16_c1':8*2/256,'medicion_12_c2':8*.2/256, 'medicion_13_c2':8*.2/256, 'medicion_14_c2':8*.2/256, 'medicion_15_c2':8*.5/256, 'medicion_16_c2':8*.5/256}
+errores = {
+'medicion_12_c1':8*.5/256,
+'medicion_13_c1':8*.5/256, 
+'medicion_14_c1':8/256, 
+'medicion_15_c1':8*2/256, 
+'medicion_16_c1':8/256,#'medicion_16_c1':8*2/256,
+'medicion_12_c2':8*.2/256, 
+'medicion_13_c2':8*.2/256, 
+'medicion_14_c2':8*.2/256, 
+'medicion_15_c2':8*.5/256, 
+'medicion_16_c2':8/256#'medicion_16_c2':8*.5/256
+}
 
 # Elijo la medición
 medicion = 16
-
+# Leo la data de la resistencia, transformo su valor a temperatura y guardo el tiempo en el que se hizo la medición
 file_resistencias = variables['base_path'] + variables['input'] + f'Medicion {medicion} - Resistencias.txt'
 resistencia = np.loadtxt(file_resistencias, delimiter = ',', dtype = float)
 temperatura = np.array([conversor_r_t[min(conversor_r_t.keys(), key = lambda x:abs(x-r))]  + 273.15 for r in resistencia[0]] )
@@ -53,25 +61,30 @@ iterador = np.arange(1, len(temperatura) + 1)
 globals()[f'medicion_{medicion}'] = {}
 
 for j in iterador:
-    # j es el indice del diccionario, se corresponde con cada medición
-    if j%25 == 0:
-        print(j)
     CH1 = np.loadtxt(variables['base_path'] + variables['input'] + f'/Medicion {medicion} - CH1 - Resistencia {j}.0.txt', delimiter = ',', dtype = float)
     CH2 = np.loadtxt(variables['base_path'] + variables['input'] + f'/Medicion {medicion} - CH2 - Resistencia {j}.0.txt', delimiter = ',', dtype = float)
 
-    # cuando escribo los datos corrigo offsets, primero respecto al CH1 y en base a eso el CH2 y agrego filtro sav
+    # Cuando escribo los datos corrigo offsets, primero respecto al CH1 y en base a eso el CH2. Además agrego filtro sav
     window = 11
     globals()[f'medicion_{medicion}'][j] = {
-        'tiempo_r':tiempo[j-1],
+        'tiempo_r':tiempo[j-1], # j-1 pq las mediciones arrancan en uno pero los valores como el tiempo en 0
         'tiempo_r':tiempo[j-1],
         'temperatura': temperatura[j-1],
         'tiempo_1':CH1[0,:],
         'tiempo_2': CH2[0,:],
-        'tension_1': savgol_filter(CH1[1, :] - CH1[1, :].mean(), window_length = window, polyorder = 0),
-        'tension_2': savgol_filter((CH2[1, :]- CH1[1, :].mean())-(CH2[1, :]- CH1[1, :].mean()).mean(), window_length = window, polyorder = 0)
+        'tension_1': savgol_filter(
+            x = CH1[1, :] - CH1[1, :].mean(), 
+            window_length = window, 
+            polyorder = 0),
+        'tension_2': savgol_filter(
+            x = (CH2[1, :]- CH1[1, :].mean())-(CH2[1, :]- CH1[1, :].mean()).mean(),
+            window_length = window, 
+            polyorder = 0)
         }
         
-##HISTERESIS
+# # ========================================================
+# # Levanto una curva de histéresis con los datos de tensión
+# # ========================================================
 
 # # Grafico todas las curvas de histeresis para c/medición. Hago un gráfico 3-D defino primero el mapa de colores
 # cmap = plt.get_cmap('plasma')
@@ -90,10 +103,11 @@ for j in iterador:
 #     ax.set_zlabel(r'Tensión secundario $\propto B$ [V]')
 # fig.show()
 
-## REMANENCIA
-
-# Calculo la remanencia para c/ curva de histeresis; es decir la diferencia entre el máximo y mínimo de tensión
-# en el canal 2, cuando el canal 1 vale 0
+# # ========================================================================================
+# # Levanto la remanencia para cada curva de histéresis con los datos de tensión que leí. Es
+# # decir, la diferencia entre el máximo y mínimo de tensión en el canal 2, cuando la tensió
+# # n en el canal 1 vale 0.
+# # ========================================================================================
 
 remanencia = []
 for i in iterador:
@@ -111,12 +125,19 @@ for i in iterador:
     
     # Agrego el punto de remanencia teniendo en cuenta un promedio de los puntos por arriba y por debajo
     remanencia.append((np.mean([m for m in minimos_tension_2 if m >= 0]) - np.mean([m for m in minimos_tension_2 if m < 0]))/2)
+
+# Convierto la lista en np.ndarray
 remanencia = np.array(remanencia)
 
 # Estoy haciendo la resta entre dos valores del canal 2, entonces aparece el factor sqrt(2):
-error = np.full(len(remanencia), np.sqrt(2)*errores[f'medicion_{medicion}_c2'])
+# error = np.full(len(remanencia), np.sqrt(2)*errores[f'medicion_{medicion}_c2'])
+error = np.full(
+shape = len(remanencia), 
+fill_value = np.sqrt(errores[f'medicion_{medicion}_c2']**2 + errores[f'medicion_{medicion}_c1']**2)
+)*.5
 
 # Hago el ajuste
+# formula = 'np.piecewise(x_, [x_ < a_0, x_ >= a_0], [lambda x_: a_1*np.abs(x_- a_0)**(a_2) + a_3, a_3])'
 formula = 'np.piecewise(x_, [x_ < a_0, x_ >= a_0], [lambda x_: a_1*np.abs(x_- a_0)**(a_2) + a_3, a_3])'
 
 # Initial guess
@@ -127,3 +148,4 @@ regr.fit(modelo = 'curve_fit', expr = formula, p0 = p_0)
 # TODO: el ajuste explota en la transición de la función partida
 regr.graph(estilo = 'ajuste_2', label_x = 'Tempeatura [K]', label_y = r'Tensión [$\propto$ V]', alpha = 100)
 regr.bondad()
+regr.parametros

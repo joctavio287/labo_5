@@ -310,9 +310,21 @@ class Ajuste:
                 fig.show()
 
         elif estilo == 'ajuste_1':
-            # Tiras auxiliares para graficar, tomo más puntos que los datos
-            x_auxiliar = np.linspace(self.x[0], self.x[-1], len(self.x)*alpha).reshape(-1)
-            ajuste = Ajuste.define_func(self.expr)(x_auxiliar, *self.parametros).reshape(-1)
+            
+            # Ajuste si se usa curve_fit o regresion_lineal
+            if self.expr is not None:
+                # Tiras auxiliares para graficar, tomo más puntos que los datos
+                x_auxiliar = np.linspace(self.x[0], self.x[-1], len(self.x)*alpha).reshape(-1)
+                ajuste = Ajuste.define_func(self.expr)(x_auxiliar, *self.parametros).reshape(-1)
+            else:
+                # Tiras auxiliares para graficar, tomo más puntos que los datos
+                x_auxiliar = np.linspace(self.x[0], self.x[-1], len(self.x)*alpha).reshape(-1)
+                if len(self.parametros) == 1:
+                    ajuste = self.parametros[0]*x_auxiliar
+                else:
+                    # Si se pasa ordenada = True
+                    ajuste = self.parametros[0] + self.parametros[1]*x_auxiliar
+                
 
             # Creo la figura y grafico
             fig, ax = plt.subplots(nrows = 1, ncols = 1)
@@ -329,15 +341,50 @@ class Ajuste:
             else:
                 fig.show()
 
-        elif estilo == 'ajuste_2':            
-            # Tiras auxiliares para graficar, tomo más puntos que los datos
-            x_auxiliar = np.linspace(self.x[0], self.x[-1], len(self.x)*alpha).reshape(-1)
-            ajuste = Ajuste.define_func(self.expr)(x_auxiliar, *self.parametros).reshape(-1)
 
-            # Calculo el error del ajuste para cada dato
-            variables_nom = np.unique([var.group() for var in re.finditer(pattern = '[a-z]\_\d', string = self.expr)]).tolist()
-            variables = [(variables_nom[i], self.parametros[i]) for i in range(len(variables_nom))]
-            franja_error = Propagacion_errores(variables = variables, errores = self.cov_parametros, formula = self.expr, dominio = x_auxiliar).fit()[1]
+        elif estilo == 'ajuste_2':
+            # Ajuste si se usa curve_fit o regresion_lineal
+            if self.expr is not None:
+                # Tiras auxiliares para graficar, tomo más puntos que los datos
+                x_auxiliar = np.linspace(self.x[0], self.x[-1], len(self.x)*alpha).reshape(-1)
+                ajuste = Ajuste.define_func(self.expr)(x_auxiliar, *self.parametros).reshape(-1)
+                variables_nom = np.unique([var.group() for var in re.finditer(pattern = '[a-z]\_\d', string = self.expr)]).tolist()
+                variables = [(variables_nom[i], self.parametros[i]) for i in range(len(variables_nom))]
+                
+                # Calculo el error del ajuste para cada dato
+                franja_error = Propagacion_errores(
+                variables = variables, 
+                errores = self.cov_parametros, 
+                formula = self.expr, 
+                dominio = x_auxiliar
+                ).fit()[1]                
+            else:
+                # Tiras auxiliares para graficar, tomo más puntos que los datos
+                x_auxiliar = np.linspace(self.x[0], self.x[-1], len(self.x)*alpha).reshape(-1)
+                if len(self.parametros) == 1:
+                    # El ajuste y las variables
+                    ajuste = self.parametros[0]*x_auxiliar
+                    variables = [('a_0',self.parametros[0])]
+
+                    # Calculo el error del ajuste para cada dato
+                    franja_error = Propagacion_errores(
+                    variables = variables, 
+                    errores = self.cov_parametros, 
+                    formula = 'a_0*x_', 
+                    dominio = x_auxiliar
+                    ).fit()[1]                    
+                else:
+                    # Si se pasa ordenada = True
+                    ajuste = self.parametros[0] + self.parametros[1]*x_auxiliar
+                    variables = [('a_0',self.parametros[0]), ('a_1', self.parametros[1])]
+            
+                    # Calculo el error del ajuste para cada dato
+                    franja_error = Propagacion_errores(
+                    variables = variables, 
+                    errores = self.cov_parametros, 
+                    formula = 'a_0 + a_1*x_', 
+                    dominio = x_auxiliar
+                    ).fit()[1]
             
             # Creo la figura y grafico
             fig, ax = plt.subplots(nrows = 1, ncols = 1)
@@ -378,16 +425,22 @@ if __name__ == '__main__':
 
     # EJEMPLO 1D:
     x = np.linspace(0,100,40)
-    y = 1 + 2*np.sin(0.1*x)*np.exp(-.5*x)
-    sigma = .005
+    y = x*0.25 + 3 #1 + 2*np.sin(0.1*x)*np.exp(-.5*x)
+    sigma = 2
     signal = np.random.normal(y, sigma, size = y.shape)
 
-    expr = 'a_0 + a_1*np.sin(.1*x_)*np.exp(a_2*x_)'
+    # expr = 'a_0 + a_1*np.sin(.1*x_)*np.exp(a_2*x_)'
+    expr = 'a_0 + a_1*x_'
+
     aj = Ajuste(x, signal, cov_y = np.array([sigma for i in x]).reshape(-1,1))
-    aj.fit(modelo='curve_fit', expr = expr, bounds =([-10, 0, -np.inf] , [10, 10, 0]))
+    # aj.fit(modelo='curve_fit', expr = expr)#, bounds =([-10, 0, -np.inf] , [10, 10, 0]))
+    aj.fit(modelo = 'regresion_lineal', ordenada = True)
     aj.graph(estilo = 'ajuste_1')
     aj.graph(estilo = 'errores', label_x = 'Tiempo [s]', label_y = r'Tension [$\propto V$]')
     aj.graph(estilo = 'ajuste_2', label_x = 'Tiempo [s]', label_y = r'Tension [$\propto V$]')
+    aj.parametros
+    aj.cov_parametros
+
     aj.bondad()
 
     # # EJEMPLO CON DOMINIO 2D

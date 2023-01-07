@@ -425,20 +425,24 @@ if __name__ == '__main__':
 
     # EJEMPLO 1D:
     x = np.linspace(0,100,40)
-    y = x*0.25 + 3 #1 + 2*np.sin(0.1*x)*np.exp(-.5*x)
-    sigma = 2
+    # y = 1 + 2*np.sin(0.1*x)*np.exp(-.5*x)
+    # y = x*0.25 + 3
+    y = np.piecewise(x = x, condlist = [x<=40 , x>40], funclist = [lambda x : 2*np.exp(-.04*x),.4])
+    sigma = .05
     signal = np.random.normal(y, sigma, size = y.shape)
-
+ 
     # expr = 'a_0 + a_1*np.sin(.1*x_)*np.exp(a_2*x_)'
-    expr = 'a_0 + a_1*x_'
+    expr = 'np.piecewise(x = x_, condlist = [x_<=a_0 , x_>a_0], funclist = [lambda x_ : a_1*np.exp(-a_2*x_),a_3])'
 
     aj = Ajuste(x, signal, cov_y = np.array([sigma for i in x]).reshape(-1,1))
-    # aj.fit(modelo='curve_fit', expr = expr)#, bounds =([-10, 0, -np.inf] , [10, 10, 0]))
-    aj.fit(modelo = 'regresion_lineal', ordenada = True)
+    # aj.fit(modelo='curve_fit', expr = expr, bounds =([-10, 0, -np.inf] , [10, 10, 0]))
+    aj.fit(modelo='curve_fit', expr = expr, p0 = [40,2,.04,.4], method = 'dogbox')
+    # aj.fit(modelo = 'regresion_lineal', ordenada = True)
     aj.graph(estilo = 'ajuste_1')
     aj.graph(estilo = 'errores', label_x = 'Tiempo [s]', label_y = r'Tension [$\propto V$]')
     aj.graph(estilo = 'ajuste_2', label_x = 'Tiempo [s]', label_y = r'Tension [$\propto V$]')
     aj.parametros
+    aj.bondad()
     aj.cov_parametros
 
     aj.bondad()

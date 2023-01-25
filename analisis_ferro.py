@@ -1,5 +1,5 @@
 import numpy as np
-from herramientas.ajustes.ajuste import Ajuste
+from labos import ajuste
 from herramientas.config.config_builder import Parser
 
 from scipy import interpolate
@@ -142,7 +142,7 @@ formula = 'np.piecewise(x_, [x_ < a_0, x_ >= a_0], [lambda x_: a_1*np.abs(x_- a_
 
 # Initial guess
 p_0 = [258,.05,.5,.04]
-regr = Ajuste(x = temperatura, y = remanencia, cov_y = error.reshape(-1,1))
+regr = ajuste.Ajuste(x = temperatura, y = remanencia, cov_y = error.reshape(-1,1))
 regr.fit(modelo = 'curve_fit', expr = formula, p0 = p_0)
 
 # TODO: el ajuste explota en la transición de la función partida

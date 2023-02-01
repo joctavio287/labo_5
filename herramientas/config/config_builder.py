@@ -1,4 +1,4 @@
-import yaml, argparse, os, datetime
+import yaml, argparse, os
 
 class Parser:
     def __init__(self, configuration:str = None) -> None:

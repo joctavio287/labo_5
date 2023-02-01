@@ -6,6 +6,8 @@ from herramientas.config.config_builder import Parser
 from scipy import interpolate
 from scipy.signal import savgol_filter
 
+# Importo los paths
+glob_path = os.path.normpath(os.getcwd())
 variables = Parser(configuration = 'ferromagnetismo').config()
 
 # La funciones auxiliares
@@ -52,7 +54,7 @@ errores = {
 medicion = 16
 
 # Leo la data de la resistencia, transformo su valor a temperatura y guardo el tiempo en el que se hizo la medición
-file_resistencias = os.path.join(os.path.normpath(os.getcwd()) + os.path.normpath(variables['input']) + os.path.normpath(f'/Medicion {medicion} - Resistencias.txt'))
+file_resistencias = os.path.join(glob_path + os.path.normpath(variables['input']) + os.path.normpath(f'/Medicion {medicion} - Resistencias.txt'))
 
 resistencia = np.loadtxt(file_resistencias, delimiter = ',', dtype = float)
 
@@ -67,8 +69,8 @@ iterador = np.arange(1, len(temperatura) + 1)
 globals()[f'medicion_{medicion}'] = {}
 
 for j in iterador:
-    CH1 = np.loadtxt(os.path.join(os.path.normpath(os.getcwd()) + os.path.normpath(variables['input']) + os.path.normpath(f'/Medicion {medicion} - CH1 - Resistencia {j}.0.txt')), delimiter = ',', dtype = float)
-    CH2 = np.loadtxt(os.path.join(os.path.normpath(os.getcwd()) + os.path.normpath(variables['input']) + os.path.normpath(f'/Medicion {medicion} - CH2 - Resistencia {j}.0.txt')), delimiter = ',', dtype = float)
+    CH1 = np.loadtxt(os.path.join(glob_path + os.path.normpath(variables['input']) + os.path.normpath(f'/Medicion {medicion} - CH1 - Resistencia {j}.0.txt')), delimiter = ',', dtype = float)
+    CH2 = np.loadtxt(os.path.join(glob_path + os.path.normpath(variables['input']) + os.path.normpath(f'/Medicion {medicion} - CH2 - Resistencia {j}.0.txt')), delimiter = ',', dtype = float)
 
     # Cuando escribo los datos corrigo offsets, primero respecto al CH1 y en base a eso el CH2. Además agrego filtro sav
     window = 11
@@ -157,7 +159,7 @@ estilo = 'ajuste_2',
 label_x = 'Tempeatura [K]',
 label_y = r'Tensión [$\propto$ V]',
 save = True,
-path = os.path.join(os.path.normpath(os.getcwd()) + os.path.normpath(variables['output']) + os.path.normpath('/Ajuste.png'))
+path = os.path.join(glob_path + os.path.normpath(variables['output']) + os.path.normpath('/Ajuste.png'))
 )
 regr.bondad()
 regr.parametros

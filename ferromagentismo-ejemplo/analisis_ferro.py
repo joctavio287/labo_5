@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from labos import ajuste
 from herramientas.config.config_builder import Parser
@@ -24,6 +25,7 @@ def funcion_conversora_temp(t):
 
 # Escala auxiliar para hacer la transformación a temperatura
 temperaturas_auxiliar = np.linspace(-300, 300, 100000) 
+
 conversor_r_t = {r: t for r, t in zip(funcion_conversora_temp(temperaturas_auxiliar), temperaturas_auxiliar)}
 
 # =========================================================================================
@@ -48,10 +50,14 @@ errores = {
 
 # Elijo la medición
 medicion = 16
+
 # Leo la data de la resistencia, transformo su valor a temperatura y guardo el tiempo en el que se hizo la medición
-file_resistencias = variables['base_path'] + variables['input'] + f'Medicion {medicion} - Resistencias.txt'
+file_resistencias = os.path.join(os.path.normpath(os.getcwd()) + os.path.normpath(variables['input']) + os.path.normpath(f'/Medicion {medicion} - Resistencias.txt'))
+
 resistencia = np.loadtxt(file_resistencias, delimiter = ',', dtype = float)
+
 temperatura = np.array([conversor_r_t[min(conversor_r_t.keys(), key = lambda x:abs(x-r))]  + 273.15 for r in resistencia[0]] )
+
 tiempo = np.array(resistencia[1])
 
 # Armo un iterador. Cada valor es el índice de la medición
@@ -61,8 +67,8 @@ iterador = np.arange(1, len(temperatura) + 1)
 globals()[f'medicion_{medicion}'] = {}
 
 for j in iterador:
-    CH1 = np.loadtxt(variables['base_path'] + variables['input'] + f'/Medicion {medicion} - CH1 - Resistencia {j}.0.txt', delimiter = ',', dtype = float)
-    CH2 = np.loadtxt(variables['base_path'] + variables['input'] + f'/Medicion {medicion} - CH2 - Resistencia {j}.0.txt', delimiter = ',', dtype = float)
+    CH1 = np.loadtxt(os.path.join(os.path.normpath(os.getcwd()) + os.path.normpath(variables['input']) + os.path.normpath(f'/Medicion {medicion} - CH1 - Resistencia {j}.0.txt')), delimiter = ',', dtype = float)
+    CH2 = np.loadtxt(os.path.join(os.path.normpath(os.getcwd()) + os.path.normpath(variables['input']) + os.path.normpath(f'/Medicion {medicion} - CH2 - Resistencia {j}.0.txt')), delimiter = ',', dtype = float)
 
     # Cuando escribo los datos corrigo offsets, primero respecto al CH1 y en base a eso el CH2. Además agrego filtro sav
     window = 11
@@ -137,15 +143,21 @@ fill_value = np.sqrt(errores[f'medicion_{medicion}_c2']**2 + errores[f'medicion_
 )*.5
 
 # Hago el ajuste
-# formula = 'np.piecewise(x_, [x_ < a_0, x_ >= a_0], [lambda x_: a_1*np.abs(x_- a_0)**(a_2) + a_3, a_3])'
-formula = 'np.piecewise(x_, [x_ < a_0, x_ >= a_0], [lambda x_: a_1*np.abs(x_- a_0)**(a_2) + a_3, a_3])'
+# formula = 'np.piecewise(x, [x < a_0, x >= a_0], [lambda x: a_1*np.abs(x- a_0)**(a_2) + a_3, a_3])'
+formula = 'np.piecewise(x, [x < a_0, x >= a_0], [lambda x: a_1*np.abs(x- a_0)**(a_2) + a_3, a_3])'
 
 # Initial guess
 p_0 = [258,.05,.5,.04]
 regr = ajuste.Ajuste(x = temperatura, y = remanencia, cov_y = error.reshape(-1,1))
-regr.fit(modelo = 'curve_fit', expr = formula, p0 = p_0)
+regr.fit(formula = formula, p0 = p_0)
 
 # TODO: el ajuste explota en la transición de la función partida
-regr.graph(estilo = 'ajuste_2', label_x = 'Tempeatura [K]', label_y = r'Tensión [$\propto$ V]', alpha = 100)
+regr.graph(
+estilo = 'ajuste_2',
+label_x = 'Tempeatura [K]',
+label_y = r'Tensión [$\propto$ V]',
+save = True,
+path = os.path.join(os.path.normpath(os.getcwd()) + os.path.normpath(variables['output']) + os.path.normpath('/Ajuste.png'))
+)
 regr.bondad()
 regr.parametros

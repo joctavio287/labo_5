@@ -18,5 +18,6 @@ El cuaderno de laboratorio se puede encontrar en [*este documento de Google*](ht
 -[Tektronix TBS1000B/EDU, TBS1000, TDS2000C/TDS1000C-EDU,
 TDS2000B/TDS1000B, TDS2000/TDS1000, TDS200 and
 TPS2000B/TPS2000 Series Digital Oscilloscopes (Programmer](https://marceluda.github.io/python-para-fisicos/tuto/labo2/05_instrumentacion/TBS1000-B-EDU-TDS2000-B-C-TDS1000-B-C-EDU-TDS200-TPS2000-Programmer_EN-US-RevA.pdf)
+
 -[Tektronix AFG1000 Series
 Arbitrary Function Generator (Programmer](https://marceluda.github.io/python-para-fisicos/tuto/labo2/05_instrumentacion/AFG1000-Programmer-Manual-EN-077112901-RevA.pdf)

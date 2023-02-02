@@ -1,5 +1,9 @@
 import time, numpy as np, pickle, os
 from matplotlib import pyplot as plt
+# Hay que correr:
+# >> pip uninstall visa
+# >> pip install pyvisa pyvisa-py pyUSB pySerial libusb PyVICP zeroconf psutil
+
 # import nidaqmx # DAQ (Data Acquisition) 
 
 import pyvisa # VISA (Virtual instrument software architecture)

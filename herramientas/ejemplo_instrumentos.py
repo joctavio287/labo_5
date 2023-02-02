@@ -1,11 +1,16 @@
 import time, numpy as np, pickle, os
 from matplotlib import pyplot as plt
-import nidaqmx, pyvisa # DAQ (Data Acquisition) y VISA (Virtual instrument software architecture)
+# import nidaqmx # DAQ (Data Acquisition) 
+
+import pyvisa # VISA (Virtual instrument software architecture)
+
+# from gpib_ctypes import make_default_gpib
+# make_default_gpib()
+
 
 # =============================================================================
 # Chequeo los instrumentos que están conectados por USB
 # =============================================================================
-
 rm = pyvisa.ResourceManager()
 instrumentos = rm.list_resources()  
 

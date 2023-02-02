@@ -12,4 +12,6 @@ Los proyectos que desarrollamos son
 
 - Conteo
 
+- Ferromagnetismo
+
 El cuaderno de laboratorio se puede encontrar en [*este documento de Google*](https://docs.google.com/document/d/1-5tvXqQ4lKJvNjaP8EFcdAosCTmPT13_5cLZoIv6zjE/edit?usp=sharing).

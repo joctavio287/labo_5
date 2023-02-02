@@ -5,7 +5,7 @@ from herramientas.config.config_builder import Parser
 
 from scipy import interpolate
 from scipy.signal import savgol_filter
-#holamundo
+
 # Importo los paths
 glob_path = os.path.normpath(os.getcwd())
 variables = Parser(configuration = 'ferromagnetismo').config()

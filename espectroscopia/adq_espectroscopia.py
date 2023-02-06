@@ -157,7 +157,7 @@ las.write('SOURce:CURRent 1.0')
 # Puede tener función CURRent o POWer (corriente o potencia)
 las.query('FUNCtion:MODE?') 
 
-# La forma funcional puede ser DC o PULSe (direct current o pulso)
+# La forma funcional puede ser DC o PULSe (direct current o pulso -tiene banda de configs,chequear-)
 las.query('SOURce:FUNCtion[:SHAPe]?')
 
 # Seteo los dos valores previos
@@ -166,26 +166,36 @@ las.write('SOURce:FUNCtion:MODE CURRent;SHAPe DC')
 # =============================================================================
 # LASER: modulación interna o externa
 # =============================================================================
+
 # Chequeo el estado de la modulación. Dice: 'SOURce[1]:AM[:STATe]?' No entiendo si va lo del corchete
-las.query('SOURce[1]:AM:1?')
+las.query('SOURce:AM:1?')
 
 # Activo la modulación. 0 = OFF 1 = ON
 las.write('SOURce:AM 1') 
+
+# Chequeo en que setup está la modulación
+las.query('SOURce:AM:SOURce?')
 
 # Fijo modulación externa o interna (se pueden tener ambas, no entiendo pa qué)
 # las.write('SOURce:AM:SOURCE EXTernal')
 las.write('SOURce:AM:SOURCE INTernal')
 
-SOUR:AM:SOUR EXT
-SOURce[1]:AM:SOURce {INTernal|EXTernal}[,{INTernal|EXTernal}]
-SOURce[1]:AM:SOURce?
-SOURce[1]:AM:INTernal:SHAPe {SINusoid|SQUare|TRIangle}
-SOURce[1]:AM:INTernal:SHAPe?
-SOURce[1]:AM:INTernal:FREQuency {MIN|MAX|DEF|<hertz>}
-SOURce[1]:AM:INTernal:FREQuency? [{MIN|MAX|DEF}]
-SOURce[1]:AM:INTernal[:DEPTh] {MIN|MAX|DEF|<percent>}
-SOURce[1]:AM:INTernal[:DEPTh]? [{MIN|MAX|DEF}]
+# Chequeo el tipo de modulación interna y la defino por triangular
+las.query('SOURce:AM:INTernal:SHApe?')
+las.write('SOURce:AM:INTernal:SHApe TRI') #{SINusoid|SQUare|TRIangle}
 
+# Chequeo la frecuencia de modulación interna y la defino por 1Hz
+las.query('SOURce:AM:INTernal:FREQuency? DEF') # [{MIN|MAX|DEF}]
+las.write('SOURce:AM:INTernal:FREQuency DEF 1') # [{MIN|MAX|DEF}] Hz
+
+# PARA CHQUEAR LA PROFUNDIAD NO SE QUE ES # TODO
+# SOURce[1]:AM:INTernal[:DEPTh] {MIN|MAX|DEF|<percent>}
+# SOURce[1]:AM:INTernal[:DEPTh]? [{MIN|MAX|DEF}]
+
+# =============================================================================
+# LASER: PD Sense Commands (photodiode Sense commands # TODO COMENTAR VER EN LA
+# DOCUMENTACION). TAMBIEN EL DE LA THERMOPILE TEC: thermoelectric cooler.
+# =============================================================================
 
 # Mido temperatura y corriente
 las.write('MEASure:SCAlar:TEMPerature?')

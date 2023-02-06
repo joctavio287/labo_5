@@ -14,6 +14,7 @@ from matplotlib import pyplot as plt
 
 # # Esto es por si falta el paquete para entrada gpib 
 # from gpib_ctypes import make_default_gpib
+# linux-gpib in linux
 # make_default_gpib()
 
 import pyvisa # VISA (Virtual instrument software architecture)

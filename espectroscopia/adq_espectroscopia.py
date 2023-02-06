@@ -29,7 +29,6 @@ instrumentos = rm.list_resources()
 # Printear la variable instrumentos para chequear que están enchufados en el mi
 # smo orden. Sino hay que rechequear la numeración de gen y osc.
 # =============================================================================
-
 osc = rm.open_resource(instrumentos[0])
 gen = rm.open_resource(instrumentos[1])
 las = rm.open_resource(instrumentos[2])
@@ -39,9 +38,8 @@ osc.query('*IDN?')
 gen.query('*IDN?')
 las.query('*IDN?')
 
-
 # =============================================================================
-# Configuro la curva
+# OSCLIOSCOPIO: configuro la curva
 # =============================================================================
 
 # Modo de transmision: Binario positivo. 
@@ -52,59 +50,35 @@ osc.write('DATa:WIDth 1')
 
 # La curva mandada inicia en el primer dato y termina en el último dato, sin importar el modo de adquisición
 osc.write("DATa:STARt 1") 
-osc.write("DATa:STOP 2500") #La curva mandada finaliza en el último dato
+osc.write("DATa:STOP 2500") 
 
 
-#Adquisición por sampleo
-self._osci.write("ACQ:MOD SAMP")
+# Modo de adquisición. Si se usa AVE, después se corre 'ACQuire:NUMAVg <NR1>' ó 'ACQuire:NUMAVg?' (<Nr1>: 4,16,64,128)
+osc.write("ACQuire:MODe SAMP") # Puede ser PEAKdetect o AVErage 
 
-#Seteo de canal
-self.setCanal(canal = 1, escala = 20e-3)
-self.setCanal(canal = 2, escala = 20e-3)
-self.setTiempo(escala = 1e-3, cero = 0)
-
-#Bloquea el control del osciloscopio
-self._osci.write("LOC")
-
-def __del__(self):
-self._osci.write("UNLOC") #Desbloquea el control del osciloscopio
-self._osci.close()
-
-def setCanal(self, canal, escala, cero = 0):
-#if coup != "DC" or coup != "AC" or coup != "GND":
-#coup = "DC"
-#self._osci.write("CH{0}:COUP ".format(canal) + coup) #Acoplamiento DC
-#self._osci.write("CH{0}:PROB 
-print
-self._osci.write("CH{0}:SCA {1}".format(canal,escala))
-self._osci.write("CH{0}:POS {1}".format(canal,cero))
-
-def getCanal(self,canal):
-return self._osci.query("CH{0}?".format(canal))
-
-def setTiempo(self, escala, cero = 0):
-self._osci.write("HOR:SCA {0}".format(escala))
-self._osci.write("HOR:POS {0}".format(cero))	
-
-def getTiempo(self):
-return self._osci.query("HOR?")
-
-def getVentana(self,canal):
-self._osci.write("SEL:CH{0} ON".format(canal)) #Hace aparecer el canal en pantalla. Por si no está habilitado
-self._osci.write("DAT:SOU CH{0}".format(canal)) #Selecciona el canal
-#xze primer punto de la waveform
-#xin intervalo de sampleo
-#ymu factor de escala vertical
-#yoff offset vertical
-xze, xin, yze, ymu, yoff = self._osci.query_ascii_values('WFMPRE:XZE?;XIN?;YZE?;YMU?;YOFF?;', 
-                                                            separator=';') 
-data = (self._osci.query_binary_values('CURV?', datatype='B', 
-                                        container=np.array) - yoff) * ymu + yze        
-tiempo = xze + np.arange(len(data)) * xin
-return tiempo, data
 # =============================================================================
-# Si vas a repetir la adquisicion muchas veces sin cambiar la escala es util de
-# finir una funcion que mida y haga las cuentas. 'WFMPRE': waveform preamble.
+# OSCLIOSCOPIO: seteo los canales
+# =============================================================================
+
+# La escala vertical admite: 2e-3,5e-3, 10e-3, 20e-3, 50e-3, 100e-3, 200e-3, 500e-3, .1e1, .2e1, .5e1. 
+escala_CH1, escala_CH2 = .5e1,.5e1
+cero_CH1, cero_CH2 = 0, 0 
+osc.write(f"CH1:SCAle {escala_CH1}")
+osc.write(f"CH2:SCAle {escala_CH2}")
+osc.write(f"CH1:POSition {cero_CH1}")
+osc.write(f"CH2:POSition {cero_CH2}")
+
+# La escala horizontal admite varios valores, pero sea cual sea que setees pone el valor más cercano
+# periodo = 1/2*np.pi*freq
+# escala_t = numero_de_periodos_en_pantalla/(10*periodo) #hay 10 divs horizontales
+escala_t, cero_t = 2.5e-6,0
+osc.write("HORizontal:SCAle {escala_t}")
+osc.write("HORizontal:POSition {cero_t}")
+
+# =============================================================================
+# OSCLIOSCOPIO: si vas a repetir la adquisicion muchas veces sin cambiar la esc
+# ala es util definir una funcion que mida y haga las cuentas. 'WFMPRE': wavefo
+# rm preamble.
 # =============================================================================
 
 # Función para sacarle una foto a la pantalla del osciloscopio por canal
@@ -131,12 +105,97 @@ def medir(inst, channel:int = 1):
     tiempo = xze + np.arange(len(data)) * xin
     return tiempo, data
 
+
 # =============================================================================
-# Entonces ahora, cuando quiera ver la pantalla del osciloscopio (siempre y cua
-# ndo esté bien seteado) se puede correr las siguientes lineas
+# GENERADOR: configuración inicial, asumiendo que usamos sólo el canal 1. Se pu
+# ede usar el dos como output
 # =============================================================================
 
-# # Ejemplo medicion
+# Seteamos la impedancia como high Z
+gen.write('OUTPut1:IMPedance INFinity')
+
+# Prendemos el canal 1
+gen.write('OUTPut1:STATe on')
+
+# Preguntamos el valor actual de la frecuencia y lo seteamos en 1 Hz. Se pueden hacer barridos
+gen.query_ascii_values('FREQ?')
+frecuencia = 1 # Hz
+gen.write(f'FREQuency {frecuencia}')
+
+# El tipo de señal: SINusoid|SQUare|PULSe|RAMP|StairDown|StairUp|Stair Up&Dwn|Trapezoid|RoundHalf|AbsSine|AbsHalfSine|ClippedSine|ChoppedSine|NegRamp|OscRise|OscDecay|CodedPulse|PosPulse|NegPulse|ExpRise|ExpDecay|Sinc|Tan|Cotan|SquareRoot|X^2|HaverSine|Lorentz|Ln(x)|X^3|CauchyDistr|BesselJ|BesselY|ErrorFunc|Airy|Rectangle|Gauss|Hamming|Hanning|Bartlett|Blackman|Laylight|Triangle|DC|Heart|Round|Chirp|Rhombus|Cardiac          
+gen.write('SOURce1:FUNCtion:SHAPe SQUare')
+
+# # Ajustamos la fase (por defecto está en radianes)
+# gen.write('SOURce1:PHASe:ADJust MINimum')
+
+# # Sincronizamos las fases de los dos outputs
+# gen.write('SOURce1:PHASe:INITiate')
+
+# Seteamos un offset puede ser en mV o V
+gen.write('SOURce1:VOLTage:LEVel:IMMediate:OFFSet 0mV')
+
+# Seteamos la amplitud
+gen.write('SOURce1:VOLTage:LEVel:IMMediate:AMPLitude .01mVpp')
+
+
+# =============================================================================
+# LASER: configuración inicial. Hay distintas formas de usar el instrumento, po
+# demos pedirle una dada configuración (medir corriente, temperatura, etc.), in
+# iciar la medición y buscar el resultado que se guardo en memoria; podemos dar
+# le una configuración y leer (que combina iniciar y buscar) ó (lo mejor) podem
+# os darle una configuración y medir en el mismo comando. Checar cuando usar wr
+# ite o query
+# =============================================================================
+
+# Para cortar una medición
+las.write('ABORt')
+
+# Para cambiar Current setpoint [A]
+las.query('SOURce:CURRent? MAXimum')
+las.write('SOURce:CURRent 1.0')
+
+# Puede tener función CURRent o POWer (corriente o potencia)
+las.query('FUNCtion:MODE?') 
+
+# La forma funcional puede ser DC o PULSe (direct current o pulso)
+las.query('SOURce:FUNCtion[:SHAPe]?')
+
+# Seteo los dos valores previos
+las.write('SOURce:FUNCtion:MODE CURRent;SHAPe DC')
+
+# =============================================================================
+# LASER: modulación interna o externa
+# =============================================================================
+# Chequeo el estado de la modulación. Dice: 'SOURce[1]:AM[:STATe]?' No entiendo si va lo del corchete
+las.query('SOURce[1]:AM:1?')
+
+# Activo la modulación. 0 = OFF 1 = ON
+las.write('SOURce:AM 1') 
+
+# Fijo modulación externa o interna (se pueden tener ambas, no entiendo pa qué)
+# las.write('SOURce:AM:SOURCE EXTernal')
+las.write('SOURce:AM:SOURCE INTernal')
+
+SOUR:AM:SOUR EXT
+SOURce[1]:AM:SOURce {INTernal|EXTernal}[,{INTernal|EXTernal}]
+SOURce[1]:AM:SOURce?
+SOURce[1]:AM:INTernal:SHAPe {SINusoid|SQUare|TRIangle}
+SOURce[1]:AM:INTernal:SHAPe?
+SOURce[1]:AM:INTernal:FREQuency {MIN|MAX|DEF|<hertz>}
+SOURce[1]:AM:INTernal:FREQuency? [{MIN|MAX|DEF}]
+SOURce[1]:AM:INTernal[:DEPTh] {MIN|MAX|DEF|<percent>}
+SOURce[1]:AM:INTernal[:DEPTh]? [{MIN|MAX|DEF}]
+
+
+# Mido temperatura y corriente
+las.write('MEASure:SCAlar:TEMPerature?')
+las.write('MEASure:SCALar:CURRent1:DC?')
+
+
+
+# =============================================================================
+# Ejemplo para guardar y cargar mediciones un diccionario en formato pkl.
+# =============================================================================
 
 # corriente_setting= [1.5,1.4,1.1,1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1] #mA
 # corriente_reading = [1.3,1.2,.9,.8,.7,.6,.5,.4,.3,.2,.1,0,0] #ma

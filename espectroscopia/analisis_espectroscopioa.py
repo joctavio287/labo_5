@@ -13,6 +13,15 @@ with open(file = os.path.join(input_path + os.path.normpath('/medicion_sinrb.pkl
 
 fig, ax = plt.subplots(nrows = 1, ncols = 1)
 ax.scatter(datos_sinrb['corriente_setting'], datos_sinrb['tension'], s = 15)
+ax.errorbar(
+datos_sinrb['corriente_setting'], 
+datos_sinrb['tension'],
+yerr = 2*(5*5/256), #(escala*divisiones/resolución)*2 (*2 pq asignamos el 200 porciento debido a ruido)
+marker = '.', 
+fmt = 'None', 
+capsize = 2, 
+color = 'black', 
+label = 'Error de los datos')
 ax.set_xlabel('Corriente controlador láser [mA]')
 ax.set_ylabel('Tensión de fotodiodo [V]')
 ax.grid(visible = True)

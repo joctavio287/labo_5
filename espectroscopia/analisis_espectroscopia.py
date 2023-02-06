@@ -7,7 +7,10 @@ variables = Parser(configuration = 'espectroscopia').config()
 input_path = os.path.join(glob_path + os.path.normpath(variables['input']))
 output_path = os.path.join(glob_path + os.path.normpath(variables['output']))
 
-# Grafico tension del fotodiodo (V) vs corriente del controlador (mA). Sin paso por rubidio
+# ==============================================================================
+# Grafico tension del fotodiodo (V) vs corriente del controlador (mA). Sin pasar
+# por rubidio
+# ==============================================================================
 with open(file = os.path.join(input_path + os.path.normpath('/medicion_sinrb.pkl')), mode = "rb") as archive:
     datos_sinrb = pickle.load(file = archive)
 
@@ -26,10 +29,13 @@ ax.set_xlabel('Corriente controlador láser [mA]')
 ax.set_ylabel('Tensión de fotodiodo [V]')
 ax.grid(visible = True)
 ax.legend()
-# fig.show()
-fig.savefig(fname = os.path.join(output_path + os.path.normpath('/medicion_sinrb.png')))
+fig.show()
+# fig.savefig(fname = os.path.join(output_path + os.path.normpath('/medicion_sinrb.png')))
 
-# Grafico tension del fotodiodo (V) vs corriente del controlador (mA). Con paso por rubidio
+# ==============================================================================
+# Grafico tension del fotodiodo (V) vs corriente del controlador (mA). Pasando p
+# or rubidio
+# ==============================================================================
 with open(file = os.path.join(input_path + os.path.normpath('/medicion_conrb.pkl')), mode = "rb") as archive:
     datos_conrb = pickle.load(file = archive)
 
@@ -48,10 +54,13 @@ ax.set_xlabel('Corriente controlador láser [mA]')
 ax.set_ylabel('Tensión de fotodiodo [V]')
 ax.grid(visible = True)
 ax.legend()
-# fig.show()
-fig.savefig(fname =os.path.join(output_path + os.path.normpath('/medicion_conrb.png')))
+fig.show()
+# fig.savefig(fname =os.path.join(output_path + os.path.normpath('/medicion_conrb.png')))
 
-# Grafico tension del fotodiodo (V) vs temperatura del controlador (ºC). Con paso por rubidio
+# ==============================================================================
+# Grafico tension del fotodiodo (V) vs temperatura del controlador (ºC). Con pas
+# o por rubidio
+# ==============================================================================
 with open(file = os.path.join(input_path + os.path.normpath('/medicion_1200uA.pkl')), mode = "rb") as archive:
     datos_1200uA = pickle.load(file = archive)
 
@@ -70,10 +79,13 @@ ax.set_xlabel(r'Corriente controlador láser [$^{o}C$]')
 ax.set_ylabel('Tensión de fotodiodo [V]')
 ax.grid(visible = True)
 ax.legend()
-# fig.show()
-fig.savefig(fname =os.path.join(output_path + os.path.normpath('/medicion_1200uA.png')))
+fig.show()
+# fig.savefig(fname =os.path.join(output_path + os.path.normpath('/medicion_1200uA.png')))
 
-# Captura del canal 1 del osciloscopio a 24.126 ºC y modulado de rampa de 1Hz. Con paso por rubidio
+# ==============================================================================
+# Captura del canal 1 del osciloscopio a 24.126 ºC y modulado de rampa de 1Hz. C
+# on paso por rubidio
+# ==============================================================================
 with open(file = os.path.join(input_path + os.path.normpath('/absorcion_24_126C.pkl')), mode = "rb") as archive:
     datos_24_126C = pickle.load(file = archive)
 
@@ -92,6 +104,6 @@ ax.set_xlabel('Tiempo [s]')
 ax.set_ylabel('Tensión de fotodiodo [V]')
 ax.grid(visible = True)
 ax.legend()
-# fig.show()
-fig.savefig(fname =os.path.join(output_path + os.path.normpath('/absorcion_24_126C.png')))
+fig.show()
+# fig.savefig(fname =os.path.join(output_path + os.path.normpath('/absorcion_24_126C.png')))
 

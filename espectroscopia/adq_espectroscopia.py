@@ -197,6 +197,10 @@ las.write('SOURce:AM:INTernal:FREQuency DEF 1') # [{MIN|MAX|DEF}] Hz
 # DOCUMENTACION). TAMBIEN EL DE LA THERMOPILE TEC: thermoelectric cooler.
 # =============================================================================
 
+# Pregunto y seteo unidades
+las.query('UNIT:TEMPerature?') 
+las.query('UNIT:TEMPerature C')#{C|CEL|CELSius|F|FAR|FAHRenheit|K|KELVin} POR DEFECTO C
+
 # Mido temperatura y corriente
 las.write('MEASure:SCAlar:TEMPerature?')
 las.write('MEASure:SCALar:CURRent1:DC?')

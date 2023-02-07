@@ -71,7 +71,7 @@ osc.write(f"CH2:POSition {cero_CH2}")
 # La escala horizontal admite varios valores, pero sea cual sea que setees pone el valor más cercano
 # periodo = 1/2*np.pi*freq
 # escala_t = numero_de_periodos_en_pantalla/(10*periodo) #hay 10 divs horizontales
-escala_t, cero_t = 2.5e-6,0
+escala_t, cero_t = 2.5e-6, 0
 osc.write("HORizontal:SCAle {escala_t}")
 osc.write("HORizontal:POSition {cero_t}")
 
@@ -205,7 +205,28 @@ las.query('UNIT:TEMPerature C')#{C|CEL|CELSius|F|FAR|FAHRenheit|K|KELVin} POR DE
 las.write('MEASure:SCAlar:TEMPerature?')
 las.write('MEASure:SCALar:CURRent1:DC?')
 
+#ANTES DE CORRER LOOP VER FORMATOS DE SALIDA
 
+temperaturas = np.arange(22, 25, 0.25)
+corrientes = np.arange(1, 1.25, .01)
+corrientes_medidas = []
+tensiones_medidas = []
+
+# Vamos a iterar para distntas temperaturas del laser
+for t in temperaturas:
+    las.write(f'SOURce:TEMPerature {t}') # CHEQUEAR COMANDO
+    while t != las.write('MEASure:SCAlar:TEMPerature?'):
+        pass
+    for i in corrientes:
+        las.write(f'SOURce:CURRent {i}')
+        time(.5)
+
+        # Guardamos la corriente medida
+        corrientes_medidas.append(las.write('MEASure:SCALar:CURRent1:DC?'))
+        
+        # Guardamos la tensión medida
+        osc.write('MEASUrement:IMMed:SOU CH1; TYPe PK2k') #FIXME: Type PK2k. Probar sin nada
+        tensiones_medidas.append(osc.query_ascii_values('MEASUrement:IMMed:VALue?')[0])
 
 # =============================================================================
 # Ejemplo para guardar y cargar mediciones un diccionario en formato pkl.

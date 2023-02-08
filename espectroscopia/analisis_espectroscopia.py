@@ -112,11 +112,25 @@ fig.show()
 # ==============================================================================
 # Vemos las mediciones con iman. Estas deberían tener 8 picos por efecto Zeeman.
 # ==============================================================================
-for i in range(1,8):
+for i in range(1,20):
+    i=1
+    i +=1
+    with open(file = os.path.join(input_path + os.path.normpath(f'/dia_2/medicion_{i}_sin_iman.pkl')), mode = "rb") as archive:
+        datos_1 = pickle.load(file = archive)
+    with open(file = f'C:/Users/jocta/Downloads/medicion_{i}_sin_iman.pkl', mode = "rb") as archive:
+        datos = pickle.load(file = archive)
+    datos_1['unidades']
+    datos['unidades']
     
-with open(file = os.path.join(input_path + os.path.normpath(f'/dia_2/medicion_{i}_con_iman.pkl')), mode = "rb") as archive:
-    datos_24_126C = pickle.load(file = archive)
-
+    
+    uno, dos, ho = 100,2,1
+    t = 55.0
+    datos['unidades']  = f'Medimos diferencia. -OSC: VERT: CH1: {uno}mV, CH2: {dos}mV; HOR: {ho}ms. -GEN: FREQ: 10hz; AMPL: 20mV pk2pk. -RB: {t}ºC. -LAS: SETPOINT: 0.9 A.'
+    f'Medimos un haz. -OSC: VERT: CH1: {uno}mV, CH2: {dos}mV; HOR: {ho}ms. -GEN: FREQ: 10hz; AMPL: 20mV pk2pk. -RB: {t}ºC. -LAS: SETPOINT: 0.9 A.'
+    f'Medimos un haz. -OSC: VERT: CH1: {uno}V, CH2: {dos}mV; HOR: {ho}ms. -GEN: FREQ: 10hz; AMPL: 20mV pk2pk. -RB: {t}ºC. -LAS: SETPOINT: 0.9 A.'
+    
+    with open(file = os.path.join(input_path + os.path.normpath(f'/dia_2/medicion_{i}_sin_iman.pkl')), mode = "wb") as archive:
+        datos = pickle.dump(obj = datos, file = archive)
 fig, ax = plt.subplots(nrows = 1, ncols = 1)
 ax.scatter(datos_24_126C['tiempo'][1230:1930], datos_24_126C['tension'][1230:1930], s = 5, color = 'black', label = 'Datos')
 # ax.errorbar(

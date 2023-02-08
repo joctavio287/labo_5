@@ -117,16 +117,7 @@ for i in range(1,8):
         globals()[f'datos_{i}'] = pickle.load(file = archive) #
 
 fig, ax = plt.subplots(nrows = 1, ncols = 1)
-ax.scatter(datos_2['tiempo'], datos_2['tension_1'], s = 5, color = 'black', label = 'Datos')
-# ax.errorbar(
-# datos_24_126C['tiempo'], 
-# datos_24_126C['tension'],
-# yerr = 2*(5*5/256), #(escala*divisiones/resolución)*2 (*2 pq asignamos el 200 porciento debido a ruido)
-# marker = '.', 
-# fmt = 'None', 
-# capsize = .2, 
-# color = 'black', 
-# label = 'Error de los datos')
+ax.plot(datos_2['tiempo'], datos_2['tension_1'], color = 'black', label = 'Datos')
 ax.set_xlabel('Tiempo [s]')
 ax.set_ylabel('Tensión de fotodiodo [V]')
 ax.grid(visible = True)

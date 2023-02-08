@@ -1,21 +1,13 @@
-# # Importo los paths
-# from herramientas.config.config_builder import Parser
-# glob_path = os.path.normpath(os.getcwd())
-# variables = Parser(configuration = 'espectroscopia').config()
+# Importo los paths
+from herramientas.config.config_builder import Parser
+variables = Parser(configuration = 'espectroscopia').config()
+glob_path = os.path.normpath(os.getcwd())
+input_path = os.path.join(glob_path + os.path.normpath(variables['input']))
+output_path = os.path.join(glob_path + os.path.normpath(variables['output']))
 
 # Importo paquetes
 import time, numpy as np, pickle, os
 from matplotlib import pyplot as plt
-
-# # Hay que correr:
-# # >> pip uninstall visa
-# # >> pip install pyvisa pyvisa-py pyUSB pySerial libusb PyVICP zeroconf psutil
-# # import nidaqmx # DAQ (Data Acquisition) 
-
-# # Esto es por si falta el paquete para entrada gpib 
-# from gpib_ctypes import make_default_gpib
-# linux-gpib in linux
-# make_default_gpib()
 
 import pyvisa # VISA (Virtual instrument software architecture)
 
@@ -125,166 +117,67 @@ gen.write(f'FREQuency {frecuencia}')
 # El tipo de señal: SINusoid|SQUare|PULSe|RAMP|StairDown|StairUp|Stair Up&Dwn|Trapezoid|RoundHalf|AbsSine|AbsHalfSine|ClippedSine|ChoppedSine|NegRamp|OscRise|OscDecay|CodedPulse|PosPulse|NegPulse|ExpRise|ExpDecay|Sinc|Tan|Cotan|SquareRoot|X^2|HaverSine|Lorentz|Ln(x)|X^3|CauchyDistr|BesselJ|BesselY|ErrorFunc|Airy|Rectangle|Gauss|Hamming|Hanning|Bartlett|Blackman|Laylight|Triangle|DC|Heart|Round|Chirp|Rhombus|Cardiac          
 gen.write('SOURce1:FUNCtion:SHAPe SQUare')
 
-# # Ajustamos la fase (por defecto está en radianes)
-# gen.write('SOURce1:PHASe:ADJust MINimum')
-
-# # Sincronizamos las fases de los dos outputs
-# gen.write('SOURce1:PHASe:INITiate')
-
 # Seteamos un offset puede ser en mV o V
 gen.write('SOURce1:VOLTage:LEVel:IMMediate:OFFSet 0mV')
 
 # Seteamos la amplitud
 gen.write('SOURce1:VOLTage:LEVel:IMMediate:AMPLitude .01mVpp')
 
-
 # =============================================================================
-# LASER: configuración inicial. Hay distintas formas de usar el instrumento, po
-# demos pedirle una dada configuración (medir corriente, temperatura, etc.), in
-# iciar la medición y buscar el resultado que se guardo en memoria; podemos dar
-# le una configuración y leer (que combina iniciar y buscar) ó (lo mejor) podem
-# os darle una configuración y medir en el mismo comando. Checar cuando usar wr
-# ite o query
-# =============================================================================
-
-# Para cortar una medición
-las.write('ABORt')
-
-# Para cambiar Current setpoint [A]
-las.query('SOURce:CURRent? MAXimum')
-las.write('SOURce:CURRent 1.0')
-
-# Puede tener función CURRent o POWer (corriente o potencia)
-las.query('FUNCtion:MODE?') 
-
-# La forma funcional puede ser DC o PULSe (direct current o pulso -tiene banda de configs,chequear-)
-las.query('SOURce:FUNCtion[:SHAPe]?')
-
-# Seteo los dos valores previos
-las.write('SOURce:FUNCtion:MODE CURRent;SHAPe DC')
-
-# =============================================================================
-# LASER: modulación interna o externa
+# Las mediciones que hacemos fueron variando escalas tanto horizontales como ve
+# rticales. Además se efectuaron cambios sobre la temperatura de la celda del R
+# b y se quitaron (o pusieron) los imánes que generaban el campo magnético cons
+# tante sobre la muestra de Rb. El láser se mantuvo siempre a la misma temperat
+# ura (CHEQUEAR #TODO). CONFIGURACION DEL PIB controlador de T de la celda: P 2
+# 50 I 80 D 75.
 # =============================================================================
 
-# Chequeo el estado de la modulación. Dice: 'SOURce[1]:AM[:STATe]?' No entiendo si va lo del corchete
-las.query('SOURce:AM:1?')
-
-# Activo la modulación. 0 = OFF 1 = ON
-las.write('SOURce:AM 1') 
-
-# Chequeo en que setup está la modulación
-las.query('SOURce:AM:SOURce?')
-
-# Fijo modulación externa o interna (se pueden tener ambas, no entiendo pa qué)
-# las.write('SOURce:AM:SOURCE EXTernal')
-las.write('SOURce:AM:SOURCE INTernal')
-
-# Chequeo el tipo de modulación interna y la defino por triangular
-las.query('SOURce:AM:INTernal:SHApe?')
-las.write('SOURce:AM:INTernal:SHApe TRI') #{SINusoid|SQUare|TRIangle}
-
-# Chequeo la frecuencia de modulación interna y la defino por 1Hz
-las.query('SOURce:AM:INTernal:FREQuency? DEF') # [{MIN|MAX|DEF}]
-las.write('SOURce:AM:INTernal:FREQuency DEF 1') # [{MIN|MAX|DEF}] Hz
-
-# PARA CHQUEAR LA PROFUNDIAD NO SE QUE ES # TODO
-# SOURce[1]:AM:INTernal[:DEPTh] {MIN|MAX|DEF|<percent>}
-# SOURce[1]:AM:INTernal[:DEPTh]? [{MIN|MAX|DEF}]
-
-# =============================================================================
-# LASER: PD Sense Commands (photodiode Sense commands # TODO COMENTAR VER EN LA
-# DOCUMENTACION). TAMBIEN EL DE LA THERMOPILE TEC: thermoelectric cooler.
-# =============================================================================
-
-# Pregunto y seteo unidades
-las.query('UNIT:TEMPerature?') 
-las.query('UNIT:TEMPerature C')#{C|CEL|CELSius|F|FAR|FAHRenheit|K|KELVin} POR DEFECTO C
-
-# Mido temperatura y corriente
-las.write('MEASure:SCAlar:TEMPerature?')
-las.write('MEASure:SCALar:CURRent1:DC?')
-
-#ANTES DE CORRER LOOP VER FORMATOS DE SALIDA
-
-temperaturas = np.arange(22, 25, 0.25)
-corrientes = np.arange(1, 1.25, .01)
-corrientes_medidas = []
-tensiones_medidas = []
-
-# Vamos a iterar para distntas temperaturas del laser
-for t in temperaturas:
-    las.write(f'SOURce:TEMPerature {t}') # CHEQUEAR COMANDO
-    while t != las.write('MEASure:SCAlar:TEMPerature?'):
-        pass
-    for i in corrientes:
-        las.write(f'SOURce:CURRent {i}')
-        time(.5)
-
-        # Guardamos la corriente medida
-        corrientes_medidas.append(las.write('MEASure:SCALar:CURRent1:DC?'))
-        
-        # Guardamos la tensión medida
-        osc.write('MEASUrement:IMMed:SOU CH1; TYPe PK2k') #FIXME: Type PK2k. Probar sin nada
-        tensiones_medidas.append(osc.query_ascii_values('MEASUrement:IMMed:VALue?')[0])
-
-# =============================================================================
-# Ejemplo para guardar y cargar mediciones un diccionario en formato pkl.
-# =============================================================================
-
-# corriente_setting= [1.5,1.4,1.1,1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1] #mA
-# corriente_reading = [1.3,1.2,.9,.8,.7,.6,.5,.4,.3,.2,.1,0,0] #ma
-# tension = [11.7,11.7,11.7,8.3,.595,.488,.425,.393,.363,.343,.333,.333,.333] #v 
-# datos = {
-#     'unidades':'Las unidades son correspondientemente mA y V. La escala vertical del osciloscopio estaba seteada en 5 V. El láser a 22.6 y el rb a 26.1 ºC',
-#     'corriente_reading':corriente_setting,
-#     'corriente_setting':corriente_reading,
-#     'tension':tension
-# }
-# # Guardar datos
-# with open(file = 'C:/repos/labo_5/input/espectroscopia/medicion_sinrb.pkl', mode = "wb") as archive:
-#     pickle.dump(obj = datos, file = archive)
-
-# # Cargar datos
-# with open(file = 'C:/repos/labo_5/input/espectroscopia/medicion_sinrb.pkl', mode = "rb") as archive:
-#     datos_leidos = pickle.load(file = archive)
-        
-# medicion 1. Escala vertical 2V, horizontal 50 ms
+# Sacamos una foto al osciloscopio (ambos canales)
 tiempo_1, tension_1 = medir(osc,1)
 tiempo_2, tension_2 = medir(osc,2)
 
-plt.figure()
-plt.plot(tiempo_1, tension_1)
-plt.show()
+# Creamos un diccionario para organizar y documentar los datos
+temperatura_celda, name = 54.7, 'medicion_19_sin_iman'
+medicion = {
+'unidades':f'Medimos un haz. -OSC: VERT: CH1: 500mV, CH2: 2mV; HOR: 1ms. -GEN: FREQ: 10hz; AMPL: 20mV pk2pk. -RB: {temperatura_celda}ºC. -LAS: SETPOINT: 0.9 A .',
+'tiempo_1':tiempo_1,
+'tiempo_2':tiempo_2,
+'tension_1':tension_1,
+'tension_2':tension_2
+}
 
-plt.figure()
-plt.scatter(tiempo_2, tension_2)
-plt.show()
+# Los graficamos para ver que estén bien
+fig, axs = plt.subplots(nrows = 3, ncols = 1, sharex = True)
+axs.flatten()
+axs[0].plot(medicion['tiempo_1'], medicion['tension_1'], label = 'Tensión del canal 1: plot')
+axs[0].grid(visible = True)
+axs[1].scatter(medicion['tiempo_1'], medicion['tension_1'], s = 2, label = 'Tensión del canal 1: scatter')
+axs[1].grid(visible = True)
+axs[2].scatter(medicion['tiempo_2'], medicion['tension_2'], s = 2, color = 'black', label = 'Tensión del canal 2')
+axs[2].grid(visible = True)
+fig.legend()
+fig.tight_layout()
+fig.show()
 
-plt.figure()
-plt.scatter(tiempo_1, tension_1,s=2)
-plt.show()
-
-# CONFIGURACION DEL PIB: P 250 I 80 D 75
-temper = 54.7
-num = 'medicion_19_sin_iman'
-medicion ={
-        'unidades':f'unosolo: Escala vertical CH1 :500mV, CH2: 2mV, horizontal 1ms. generador: 10hz, ampl vpkp: 20mV; muestra:{temper}, laser: 0.9 A max.',
-        'tiempo_1':tiempo_1,
-        'tiempo_2':tiempo_2,
-        'tension_1':tension_1,
-        'tension_2':tension_2}
-
-with open(file = f'C:/Users/Publico/Desktop/GRUPO 8 COOLS/{num}.pkl', mode = "wb") as archive:
+# Los guardamos
+fname = f'C:/Users/Publico/Desktop/GRUPO 8 COOLS/{name}.pkl'
+with open(file = fname, mode = "wb") as archive:
    pickle.dump(obj = medicion, file = archive)     
 
-with open(file = f'C:/Users/Publico/Desktop/GRUPO 8 COOLS/{num}.pkl', mode = "rb") as archive:
-   medicion_ = pickle.load(file = archive)   
-        
-plt.figure()
-plt.scatter(medicion_['tiempo_1'], medicion_['tension_1'],s=2)
-plt.show()
+# Los abrimos para ver que este todo bien
+with open(file = fname, mode = "rb") as archive:
+   datos = pickle.load(file = archive)   
 
-plt.figure()
-plt.plot(medicion_['tiempo_2'], medicion_['tension_2'])
-plt.show()
+# Los graficamos con el mismo propósito
+fig, axs = plt.subplots(nrows = 3, ncols = 1, sharex = True)
+axs.flatten()
+axs[0].plot(datos['tiempo_1'], datos['tension_1'], label = 'Tensión del canal 1: plot')
+axs[0].grid(visible = True)
+axs[1].scatter(datos['tiempo_1'], datos['tension_1'], s = 2, label = 'Tensión del canal 1: scatter')
+axs[1].grid(visible = True)
+axs[2].scatter(datos['tiempo_2'], datos['tension_2'], s = 2, color = 'black', label = 'Tensión del canal 2')
+axs[2].grid(visible = True)
+fig.legend()
+fig.tight_layout()
+fig.show()
+

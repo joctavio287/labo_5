@@ -29,8 +29,8 @@ instrumentos = rm.list_resources()
 # Printear la variable instrumentos para chequear que están enchufados en el mi
 # smo orden. Sino hay que rechequear la numeración de gen y osc.
 # =============================================================================
-osc = rm.open_resource(instrumentos[0])
-gen = rm.open_resource(instrumentos[1])
+gen = rm.open_resource(instrumentos[0])
+osc = rm.open_resource(instrumentos[1])
 las = rm.open_resource(instrumentos[2])
 
 # Chequeo que estén bien etiquetados
@@ -71,9 +71,9 @@ osc.write(f"CH2:POSition {cero_CH2}")
 # La escala horizontal admite varios valores, pero sea cual sea que setees pone el valor más cercano
 # periodo = 1/2*np.pi*freq
 # escala_t = numero_de_periodos_en_pantalla/(10*periodo) #hay 10 divs horizontales
-escala_t, cero_t = 2.5e-6, 0
-osc.write("HORizontal:SCAle {escala_t}")
-osc.write("HORizontal:POSition {cero_t}")
+escala_t, cero_t = .5e-3, 0
+osc.write(f"HORizontal:SCAle {escala_t}")
+osc.write(f"HORizontal:POSition {cero_t}")
 
 # =============================================================================
 # OSCLIOSCOPIO: si vas a repetir la adquisicion muchas veces sin cambiar la esc
@@ -248,3 +248,43 @@ for t in temperaturas:
 # # Cargar datos
 # with open(file = 'C:/repos/labo_5/input/espectroscopia/medicion_sinrb.pkl', mode = "rb") as archive:
 #     datos_leidos = pickle.load(file = archive)
+        
+# medicion 1. Escala vertical 2V, horizontal 50 ms
+tiempo_1, tension_1 = medir(osc,1)
+tiempo_2, tension_2 = medir(osc,2)
+
+plt.figure()
+plt.plot(tiempo_1, tension_1)
+plt.show()
+
+plt.figure()
+plt.scatter(tiempo_2, tension_2)
+plt.show()
+
+plt.figure()
+plt.scatter(tiempo_1, tension_1,s=2)
+plt.show()
+
+# CONFIGURACION DEL PIB: P 250 I 80 D 75
+temper = 54.7
+num = 'medicion_19_sin_iman'
+medicion ={
+        'unidades':f'unosolo: Escala vertical CH1 :500mV, CH2: 2mV, horizontal 1ms. generador: 10hz, ampl vpkp: 20mV; muestra:{temper}, laser: 0.9 A max.',
+        'tiempo_1':tiempo_1,
+        'tiempo_2':tiempo_2,
+        'tension_1':tension_1,
+        'tension_2':tension_2}
+
+with open(file = f'C:/Users/Publico/Desktop/GRUPO 8 COOLS/{num}.pkl', mode = "wb") as archive:
+   pickle.dump(obj = medicion, file = archive)     
+
+with open(file = f'C:/Users/Publico/Desktop/GRUPO 8 COOLS/{num}.pkl', mode = "rb") as archive:
+   medicion_ = pickle.load(file = archive)   
+        
+plt.figure()
+plt.scatter(medicion_['tiempo_1'], medicion_['tension_1'],s=2)
+plt.show()
+
+plt.figure()
+plt.plot(medicion_['tiempo_2'], medicion_['tension_2'])
+plt.show()

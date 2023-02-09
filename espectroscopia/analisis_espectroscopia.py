@@ -1,4 +1,7 @@
 import os, pickle, matplotlib.pyplot as plt, numpy as np
+from scipy.signal import find_peaks
+from scipy.signal import savgol_filter
+from labos.ajuste import Ajuste
 from herramientas.config.config_builder import Parser
 
 # Importo los paths
@@ -114,13 +117,68 @@ fig.show()
 # ==============================================================================
 for i in range(1,8):
     with open(file = os.path.join(input_path + os.path.normpath(f'/dia_2/medicion_{i}_con_iman.pkl')), mode = "rb") as archive:
-        globals()[f'datos_{i}'] = pickle.load(file = archive) #
+        # globals()[f'datos_{i}'] = pickle.load(file = archive) #
+        datos = pickle.load(file = archive)
 
 fig, ax = plt.subplots(nrows = 1, ncols = 1)
-ax.plot(datos_2['tiempo'], datos_2['tension_1'], color = 'black', label = 'Datos')
+ax.plot(eval(f'datos_{i}')['tiempo'], eval(f'datos_{i}')['tension_1'], color = 'black', label = 'Datos')
 ax.set_xlabel('Tiempo [s]')
 ax.set_ylabel('Tensión de fotodiodo [V]')
 ax.grid(visible = True)
 ax.legend()
 fig.show()
 # fig.savefig(fname =os.path.join(output_path + os.path.normpath('/absorcion_24_126C.png')))
+
+# ==============================================================================
+# La fórmula para deducir la corriente con la cual alimentamos el láser es, acor
+# de al manual:
+#
+#    I_las_diode = I_las_diode_set + I_las_diode_max * tension_mod * (1/10V)
+#
+# Como la tensión de la moduladora era una funcion rampa de 20 Hz y 20 mV pk2pk;
+# la intensidad de corriente que fijamos en el láser era de 0.9 mA y el máximo v
+# alor de input de intensidad de corriente era ±2 mA. Entonces
+# 
+#            I_las_diode (t) = .0009 + .0002*canal_2(.01V, 20Hz, t) # A
+#
+#   TEMPERATURA LASER # TODO
+# ==============================================================================
+
+# Ajuste de prueba
+
+# Leo los datos
+
+i = 19
+fname = os.path.join(input_path + os.path.normpath(f'/dia_2/medicion_{i}_sin_iman.pkl'))
+with open(file = fname, mode = "rb") as archive:
+    globals()[f'datos_{i}'] = pickle.load(file = archive)
+
+aj = Ajuste(x = eval(f'datos_{i}')['tiempo'], y = eval(f'datos_{i}')['tension_2'], cov_y = eval(f'datos_{i}')['error_canal_2'])
+aj.fit('a_0+a_1*x')
+tension_2 = aj.parametros[0] + eval(f'datos_{i}')['tiempo']*aj.parametros[1]
+
+indice_picos = find_peaks(
+x = -eval(f'datos_{i}')['tension_1'].reshape(-1),
+# x = -savgol_filter(eval(f'datos_{i}')['tension_1'].reshape(-1), window_length = 7, polyorder = 0),
+distance = 15,
+# threshold = .5,
+# wlen = 5,
+# prominence = (0.01,50), 
+width = 10
+)[0].tolist()
+fig, ax = plt.subplots(nrows =1, ncols = 1)
+ax.scatter(eval(f'datos_{i}')['tiempo'],eval(f'datos_{i}')['tension_1'], s = 2)
+# ax.plot(eval(f'datos_{i}')['tiempo'],savgol_filter(eval(f'datos_{i}')['tension_1'].reshape(-1), 
+#     window_length = 11, 
+#     polyorder = 0), color ='red')
+ax.scatter(eval(f'datos_{i}')['tiempo'][indice_picos],eval(f'datos_{i}')['tension_1'][indice_picos], color = 'black')
+ax.scatter(eval(f'datos_{i}')['tiempo'], tension_2, s = 2)
+ax.scatter(eval(f'datos_{i}')['tiempo'][indice_picos],tension_2[indice_picos], color = 'black')
+fig.show()
+
+# corriente = .0009 + .0002*tension_2[indice_picos]
+# eval(f'datos_{i}')['indices_absorcion'] = indice_picos
+# eval(f'datos_{i}')['unidades'] += ' ABSOR: unidad A'
+# eval(f'datos_{i}')['corrientes_absorcion'] = corriente
+with open(file = fname, mode = "wb") as archive:
+    pickle.dump(file = archive, obj = eval(f'datos_{i}'))

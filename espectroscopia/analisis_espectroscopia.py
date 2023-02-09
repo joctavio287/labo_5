@@ -115,19 +115,49 @@ fig.show()
 # ==============================================================================
 # Vemos las mediciones con iman. Estas deberían tener 8 picos por efecto Zeeman.
 # ==============================================================================
-for i in range(1,8):
-    with open(file = os.path.join(input_path + os.path.normpath(f'/dia_2/medicion_{i}_con_iman.pkl')), mode = "rb") as archive:
-        # globals()[f'datos_{i}'] = pickle.load(file = archive) #
-        datos = pickle.load(file = archive)
+
+cmap = plt.get_cmap('plasma')
+cmap_values = np.linspace(0., 1., 3)
+colors = cmap(cmap_values)
+colors_rgb = ['#{0:02x}{1:02x}{2:02x}'.format(int(255*a), int(255*b), int(255*c)) for a, b, c, _ in colors]
 
 fig, ax = plt.subplots(nrows = 1, ncols = 1)
-ax.plot(eval(f'datos_{i}')['tiempo'], eval(f'datos_{i}')['tension_1'], color = 'black', label = 'Datos')
+for i, c in zip(range(5,8), colors_rgb):
+    with open(file = os.path.join(input_path + os.path.normpath(f'/dia_2/medicion_{i}_con_iman.pkl')), mode = "rb") as archive:
+        datos = pickle.load(file = archive)
+    temp = datos['temperatura_rb']
+    ax.plot(datos['tiempo'], datos['tension_1'], label = f'Con imán {temp}'+r'$^{o}C$')
 ax.set_xlabel('Tiempo [s]')
-ax.set_ylabel('Tensión de fotodiodo [V]')
+ax.set_ylabel('Tensión del fotodiodo [V]')
 ax.grid(visible = True)
-ax.legend()
+fig.legend()
+fig.tight_layout()
 fig.show()
-# fig.savefig(fname =os.path.join(output_path + os.path.normpath('/absorcion_24_126C.png')))
+# fig.savefig(fname =os.path.join(output_path + os.path.normpath('/ultimas_tempereaturas_con_iman.png')))
+
+# ==============================================================================
+# Vemos las mediciones sin iman. Estas deberían tener 4 picos por los dos isótop
+# os.
+# ==============================================================================
+cmap = plt.get_cmap('plasma')
+cmap_values = np.linspace(0., 1., 8)
+colors = cmap(cmap_values)
+colors_rgb = ['#{0:02x}{1:02x}{2:02x}'.format(int(255*a), int(255*b), int(255*c)) for a, b, c, _ in colors]
+
+fig, ax = plt.subplots(nrows = 1, ncols = 1)
+for i, c in zip(range(12,20), colors_rgb):
+    with open(file = os.path.join(input_path + os.path.normpath(f'/dia_2/medicion_{i}_sin_iman.pkl')), mode = "rb") as archive:
+        datos = pickle.load(file = archive)
+    datos['unidades']
+    temp = datos['temperatura_rb']
+    ax.plot(datos['tiempo'], datos['tension_1'], label = f'Con imán {temp}'+r'$^{o}C$')
+ax.set_xlabel('Tiempo [s]')
+ax.set_ylabel('Tensión del fotodiodo [V]')
+ax.grid(visible = True)
+fig.legend()
+fig.tight_layout()
+fig.show()
+# fig.savefig(fname =os.path.join(output_path + os.path.normpath('/ultimas_tempereaturas_sin_iman.png')))
 
 # ==============================================================================
 # La fórmula para deducir la corriente con la cual alimentamos el láser es, acor

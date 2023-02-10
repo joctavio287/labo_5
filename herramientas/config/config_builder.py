@@ -1,4 +1,22 @@
 import yaml, argparse, os
+def save_dict(path:str, dic:dict):
+    try:
+        f = open(file = path, mode = 'w')
+        f.write(str(dic))
+        f.close()
+        print(f'Se guardo en: {path}')
+    except:
+        print('Algo fallo')
+
+def load_dict(path:str):
+    try:
+        f = open(file = path, mode = 'r')
+        data = f.read()
+        data = eval(data)
+        f.close()
+        return data
+    except:
+        print('Algo fallo')
 
 class Parser:
     def __init__(self, configuration:str = None) -> None:

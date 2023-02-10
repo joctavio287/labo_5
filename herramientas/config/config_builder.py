@@ -1,19 +1,16 @@
-import yaml, argparse, os
+import yaml, argparse, os, pickle
 def save_dict(path:str, dic:dict):
     try:
-        f = open(file = path, mode = 'w')
-        f.write(str(dic))
-        f.close()
+        with open(file = path, mode = "wb") as archive:
+            pickle.dump(file = archive, obj=dic)
         print(f'Se guardo en: {path}')
     except:
         print('Algo fallo')
 
 def load_dict(path:str):
     try:
-        f = open(file = path, mode = 'r')
-        data = f.read()
-        data = eval(data)
-        f.close()
+        with open(file = path, mode = "rb") as archive:
+            data = pickle.load(file = archive)
         return data
     except:
         print('Algo fallo')

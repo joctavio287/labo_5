@@ -254,10 +254,22 @@ for c, f in zip(colors_rgb, frecuencias_transiciones):
 fig.legend()
 fig.show()
 
-for i in range(4,20):
-    fname = os.path.join(os.path.normpath(input_path) + os.path.normpath(f'/dia_2/medicion_{i}_sin_iman.pkl'))
+for i in range(1,7):
+    fname = os.path.join(os.path.normpath(input_path) + os.path.normpath(f'/dia_4/medicion_f_{i}_con_iman.pkl'))
     datos = load_dict(path = fname)
+    datos['tension_1'] = datos['tension_1'].reshape(-1,1)
+    datos['tension_2'] = datos['tension_2'].reshape(-1,1)
+    datos['tiempo'] = datos['tiempo_1'].reshape(-1,1)
+    datos.pop('tiempo_1')
+    datos.pop('tiempo_2')
+    datos['temperatura_rb'] = float(datos['unidades'].split('º')[0].split('RB: ')[1])
+    error_1 = (float(datos['unidades'].split('CH1: ')[1].split('mV')[0])/1000)*(8/256)
+    error_2 = (float(datos['unidades'].split('CH2: ')[1].split('mV')[0])/1000)*(8/256)
 
+    datos['error_canal_1'] = np.full(shape = datos['tension_1'].shape, fill_value = error_1)
+    datos['error_canal_2'] = np.full(shape = datos['tension_2'].shape, fill_value = error_2)
+
+    save_dict(path = fname, dic = datos)
     # Hago un ajuste para suavizar el canal 2 y tener la tension de los picos
     aj = Ajuste(
     x = datos['tiempo'],

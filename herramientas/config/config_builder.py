@@ -1,19 +1,38 @@
 import yaml, argparse, os, pickle
-def save_dict(path:str, dic:dict):
+def save_dict(fname:str, dic:dict, rewrite: bool = False):
+    '''
+    Para salvar un diccionario en formato pickle. 
+    '''
+    isfile = os.path.isfile(fname)
+    if isfile:
+        if not rewrite:
+            print('Este archivo ya existe, para sobreescribirlo usar el argumento rewrite = True.')
+            return
     try:
-        with open(file = path, mode = "wb") as archive:
+        with open(file = fname, mode = "wb") as archive:
             pickle.dump(file = archive, obj=dic)
-        print(f'Se guardo en: {path}')
+        texto = f'Se guardo en: {fname}.'
+        if isfile:
+            texto += f'Atención: se reescribió el archivo {fname}'
     except:
-        print('Algo fallo')
+        print('Algo fallo cuando se guardaba')
+    return
 
-def load_dict(path:str):
+def load_dict(fname:str):
+    '''
+    Para cargar un diccionario en formato pickle. 
+    '''
+    isfile = os.path.isfile(fname)
+    if not isfile:
+        print(f'El archivo {fname} no existe')
+        return
     try:
-        with open(file = path, mode = "rb") as archive:
+        with open(file = fname, mode = "rb") as archive:
             data = pickle.load(file = archive)
         return data
     except:
         print('Algo fallo')
+    return
 
 class Parser:
     def __init__(self, configuration:str = None) -> None:

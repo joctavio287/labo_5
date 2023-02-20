@@ -111,11 +111,11 @@ fig.show()
 # fig.savefig(fname =os.path.join(output_path + os.path.normpath('/absorcion_24_126C.png')))
 
 ################################################DIA2#######################################################
-# ==============================================================================
-# Vemos las mediciones con iman. Estas deberían tener 8 picos por efecto Zeeman.
-# ==============================================================================
+# ========================================================================================
+# Vemos las mediciones con iman del dia 2. Estas deberían tener 8 picos por efecto Zeeman.
+# ========================================================================================
 fig, ax = plt.subplots(nrows = 1, ncols = 1)
-for i in range(5, 8):
+for i in range(1, 7):
     fname = os.path.join(input_path + os.path.normpath(f'/dia_2/medicion_{i}_con_iman.pkl'))
     datos = load_dict(path = fname)
     temp = datos['temperatura_rb']
@@ -128,6 +128,24 @@ fig.legend()
 fig.tight_layout()
 fig.show()
 # fig.savefig(fname =os.path.join(output_path + os.path.normpath('/ultimas_tempereaturas_con_iman.png')))
+
+# ========================================================================================
+# Vemos las mediciones con iman del dia 4. Estas deberían tener 8 picos por efecto Zeeman.
+# ========================================================================================
+fig, ax = plt.subplots(nrows = 1, ncols = 1)
+for i in range(1, 7):
+    fname = os.path.join(input_path + os.path.normpath(f'/dia_4/medicion_f_{i}_con_iman.pkl'))
+    datos = load_dict(path = fname)
+    temp = datos['temperatura_rb']
+    ax.plot(datos['tiempo'], datos['tension_1'], label = f'T = {temp}'+r'$^{o}C$')
+ax.set_xlabel('Tiempo [s]')
+ax.set_ylabel('Tensión del fotodetector [V]')
+ax.grid(visible = True)
+fig.suptitle('Con imán')
+fig.legend()
+fig.tight_layout()
+fig.show()
+# fig.savefig(fname =os.path.join(output_path + os.path.normpath('/ultimas_tempereaturas_con_iman_dia4.png')))
 
 # ==============================================================================
 # Vemos las mediciones sin iman. Estas deberían tener 4 picos por los dos isótop
@@ -162,56 +180,57 @@ fig.show()
 #
 # TEMPERATURA LASER: 23.927 ºC
 # ==============================================================================
+for i in range(1,7):
+    fname = os.path.join(input_path + os.path.normpath(f'/dia_4/medicion_f_{i}_con_iman.pkl'))
+    datos = load_dict(path = fname)
 
-fname = os.path.join(input_path + os.path.normpath(f'/dia_2/medicion_{i}_con_iman.pkl'))
-datos = load_dict(path = fname)
+    # Suavizo la tensión del canal 2
+    aj = Ajuste(
+    x = datos['tiempo'],
+    y = datos['tension_2'],
+    cov_y = datos['error_canal_2'])
+    aj.fit('a_0+a_1*x')
+    tension_2 = aj.parametros[0] + datos['tiempo']*aj.parametros[1]
 
-# Suavizo la tensión del canal 2
-aj = Ajuste(
-x = datos['tiempo'],
-y = datos['tension_2'],
-cov_y = datos['error_canal_2'])
-aj.fit('a_0+a_1*x')
-tension_2 = aj.parametros[0] + datos['tiempo']*aj.parametros[1]
+    indice_picos = find_peaks(
+    # x = -datos['tension_1'].reshape(-1),
+    x = -savgol_filter(datos['tension_1'].reshape(-1), window_length = 11, polyorder = 0),
+    distance = 25,
+    # threshold = .5,
+    # wlen = 5,
+    # prominence = (0.01,50), 
+    width = 25
+    )[0].tolist()
 
-indice_picos = find_peaks(
-# x = -datos['tension_1'].reshape(-1),
-x = -savgol_filter(datos['tension_1'].reshape(-1), window_length = 11, polyorder = 0),
-distance = 25,
-# threshold = .5,
-# wlen = 5,
-# prominence = (0.01,50), 
-width = 25
-)[0].tolist()
-
-indice_picos += find_peaks(
-# x = datos['tension_1'].reshape(-1),
-x = savgol_filter(datos['tension_1'].reshape(-1), window_length = 11, polyorder = 0),
-distance = 25,
-# threshold = .5,
-# wlen = 5,
-# prominence = (0.01,50), 
-width = 25
-)[0].tolist()
+    indice_picos += find_peaks(
+    # x = datos['tension_1'].reshape(-1),
+    x = savgol_filter(datos['tension_1'].reshape(-1), window_length = 11, polyorder = 0),
+    distance = 25,
+    # threshold = .5,
+    # wlen = 5,
+    # prominence = (0.01,50), 
+    width = 25
+    )[0].tolist()
 
 
-fig, ax = plt.subplots(nrows =1, ncols = 1)
-ax.scatter(
-datos['tiempo'],
-datos['tension_1'],
-# savgol_filter(datos['tension_1'].reshape(-1), window_length = 11, polyorder = 0),
-s = 2)
+    fig, ax = plt.subplots(nrows =1, ncols = 1)
+    ax.plot(
+    datos['tiempo'],
+    # datos['tension_1'],
+    savgol_filter(datos['tension_1'].reshape(-1), window_length = 11, polyorder = 0)
+    )
+    # s = 2)
 
-# ax.plot(datos['tiempo'],savgol_filter(datos['tension_1'].reshape(-1), 
-#     window_length = 11, 
-#     polyorder = 0), color ='red')
-ax.scatter(datos['tiempo'][indice_picos],datos['tension_1'][indice_picos], color = 'black')
-# ax.scatter(datos['tiempo'], tension_2, s = 2)
-# ax.scatter(datos['tiempo'][indice_picos],tension_2[indice_picos], color = 'black')
-fig.show()
+    # ax.plot(datos['tiempo'],savgol_filter(datos['tension_1'].reshape(-1), 
+    #     window_length = 11, 
+    #     polyorder = 0), color ='red')
+    ax.scatter(datos['tiempo'][indice_picos],datos['tension_1'][indice_picos], color = 'black')
+    # ax.scatter(datos['tiempo'], tension_2, s = 2)
+    # ax.scatter(datos['tiempo'][indice_picos],tension_2[indice_picos], color = 'black')
+    fig.show()
 
-indice_picos.sort()
-indice_picos
+# indice_picos.sort()
+# indice_picos
 
 # corriente = .0009 + .0002*tension_2[indice_picos]
 # datos['indices_absorcion'] = indice_picos
@@ -257,19 +276,7 @@ fig.show()
 for i in range(1,7):
     fname = os.path.join(os.path.normpath(input_path) + os.path.normpath(f'/dia_4/medicion_f_{i}_con_iman.pkl'))
     datos = load_dict(path = fname)
-    datos['tension_1'] = datos['tension_1'].reshape(-1,1)
-    datos['tension_2'] = datos['tension_2'].reshape(-1,1)
-    datos['tiempo'] = datos['tiempo_1'].reshape(-1,1)
-    datos.pop('tiempo_1')
-    datos.pop('tiempo_2')
-    datos['temperatura_rb'] = float(datos['unidades'].split('º')[0].split('RB: ')[1])
-    error_1 = (float(datos['unidades'].split('CH1: ')[1].split('mV')[0])/1000)*(8/256)
-    error_2 = (float(datos['unidades'].split('CH2: ')[1].split('mV')[0])/1000)*(8/256)
 
-    datos['error_canal_1'] = np.full(shape = datos['tension_1'].shape, fill_value = error_1)
-    datos['error_canal_2'] = np.full(shape = datos['tension_2'].shape, fill_value = error_2)
-
-    save_dict(path = fname, dic = datos)
     # Hago un ajuste para suavizar el canal 2 y tener la tension de los picos
     aj = Ajuste(
     x = datos['tiempo'],

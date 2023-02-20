@@ -145,7 +145,7 @@ ax.scatter(corriente_t, tension_glow, color = 'red', label = 'ida')
 ax.scatter(corriente_t_v, tension_glow_v, color = 'blue', label = 'vuelta')
 ax.set_xlabel('Corriente [A]')
 ax.set_ylabel('Tension [V]')
-ax.grid()
+ax.grid(visible = True)
 fig.legend()
 fig.show()
 
@@ -178,11 +178,7 @@ datos = {
 'corriente_2': np.concatenate((corriente_2, corriente_2_v)),
 'corriente_t': np.concatenate((corriente_t, corriente_t_v)),
 }
-for i in range(1, 5):
-    fname = f'C:/repos/labo_5/input/glow/medicion_{i}.pkl'
-    datos = load_dict(fname = fname)
-    datos['presion']  = float(datos['unidades'].split('Pr: ')[1].split(' mbar')[0])
-    save_dict(fname = fname, dic = datos, rewrite = True)
+
 fname = f'C:\GRUPO8\medicion_{num}.pkl'
 save_dict(fname = fname, dic = datos)
 
@@ -193,51 +189,36 @@ ax.scatter(datos_leidos['corriente_t'].reshape(-1), datos_leidos['tension_glow']
 ax.scatter(datos_leidos['corriente_t_v'].reshape(-1), datos_leidos['tension_glow_v'].reshape(-1), color = 'blue', label = 'vuelta')
 ax.set_xlabel('Corriente [A]')
 ax.set_ylabel('Tension [V]')
+ax.grid(visible = True)
 fig.legend()
 fig.show()
 
+
 # Graficamos todas las mediciones juntas
-fig, ax = plt.subplots(nrows= 1, ncols = 1)
-# for i in range(1, num + 1):
+cmap = plt.get_cmap('plasma')
+cmap_values = np.linspace(0., 1., num)
+colors = cmap(cmap_values)
+colors_rgb = ['#{0:02x}{1:02x}{2:02x}'.format(int(255*a), int(255*b), int(255*c)) for a, b, c, _ in colors]
+
+fig, ax = plt.subplots(nrows = 1, ncols = 1)
+for c, i in zip(colors_rgb, np.arange(1, num + 1 , 1)): # for i in range(1, num + 1):
     # fname = f'C:\GRUPO8\medicion_{i}.pkl'
-fname = f'C:/repos/labo_5/input/glow/medicion_{i}.pkl'
-datos_leidos = load_dict(fname = fname)
-ax.scatter(datos_leidos['corriente_t'], datos_leidos['tension_glow'], label = f'{datos_leidos['Pr']} mbar', s = 2)
-ini_flechas_x, ini_flechas_y = np.roll(datos_leidos['corriente_t'], 1), np.roll(datos_leidos['tension_glow'], 1)
-fin_flechas_x = np.concatenate((datos_leidos['corriente_t'][:-1],np.array([datos_leidos['corriente_t'][-2]])))
-fin_flechas_y = np.concatenate((datos_leidos['tension_glow'][:-1],np.array([datos_leidos['tension_glow'][-2]]))) 
-for X_f, Y_f, X_i, Y_i in zip(fin_flechas_x, fin_flechas_y, ini_flechas_x, ini_flechas_y):
-    ax.annotate(text = "",
-    xy = (X_f,Y_f), 
-    xytext = (X_i,Y_i),
-    arrowprops = {'arrowstyle': "->", 'color':f'{c}'},
-    size = 7
-    )
+    fname = f'C:/repos/labo_5/input/glow/medicion_{i}.pkl'
+    datos_leidos = load_dict(fname = fname)
+    pr = datos_leidos['presion']
+    ax.scatter(datos_leidos['corriente_t'], datos_leidos['tension_glow'], label = f'{pr} mbar', s = 2, color = c)
+    ini_flechas_x, ini_flechas_y = np.roll(datos_leidos['corriente_t'], 1), np.roll(datos_leidos['tension_glow'], 1)
+    fin_flechas_x = np.concatenate((datos_leidos['corriente_t'][:-1],np.array([datos_leidos['corriente_t'][-2]])))
+    fin_flechas_y = np.concatenate((datos_leidos['tension_glow'][:-1],np.array([datos_leidos['tension_glow'][-2]]))) 
+    for X_f, Y_f, X_i, Y_i in zip(fin_flechas_x, fin_flechas_y, ini_flechas_x, ini_flechas_y):
+        ax.annotate(text = "",
+        xy = (X_f,Y_f), 
+        xytext = (X_i,Y_i),
+        arrowprops = dict(arrowstyle = "->", color = c),
+        size = 7
+        )
+ax.grid(visible = True)
 ax.set_xlabel('Corriente [A]')
 ax.set_ylabel('Tension [V]')
 fig.legend()
-fig.show()
-
-import pandas as pd
-df = pd.DataFrame.from_dict({'x' : [0,3,8,7,5,3,2,1],
-                             'y' : [0,1,3,5,9,8,7,5]})
-xpuntas = df['x']
-ypuntas = df['y']
-
-# calculate position and direction vectors:
-
-xinicio = np.roll(xpuntas, 1)
-yinicio = np.roll(ypuntas, 1)
-fig, ax = plt.subplots()
-ax.scatter(x,y)
-ax.plot(x,y)
-
-# plot arrow on each line:
-for X_f, Y_f, X_i, Y_i in zip(xpuntas, ypuntas, xinicio, yinicio):
-    ax.annotate(text = "",
-    xy = (X_f,Y_f), 
-    xytext = (X_i,Y_i),
-    arrowprops = dict(arrowstyle="->", color='k'),
-    size = 20
-    )
 fig.show()

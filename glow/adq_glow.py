@@ -155,6 +155,7 @@ num = 4
 Pr, L = 0.38 , 44.04
 datos = { 
 'unidades': f'Medimos un ciclo de histeresis. Pr: {Pr} mbar; L: ({L} +- .01) mm. La tensión está en V, la corriente en A',
+'presion' : Pr,
 'tension_entrada_i': tension_iter.reshape(-1,1),
 'tension_entrada_v':tension_iter_v.reshape(-1,1),
 'tension_r0_i': tension_R0.reshape(-1,1),
@@ -177,12 +178,16 @@ datos = {
 'corriente_2': np.concatenate((corriente_2, corriente_2_v)),
 'corriente_t': np.concatenate((corriente_t, corriente_t_v)),
 }
-
+for i in range(1, 5):
+    fname = f'C:/repos/labo_5/input/glow/medicion_{i}.pkl'
+    datos = load_dict(fname = fname)
+    datos['presion']  = float(datos['unidades'].split('Pr: ')[1].split(' mbar')[0])
+    save_dict(fname = fname, dic = datos, rewrite = True)
 fname = f'C:\GRUPO8\medicion_{num}.pkl'
-save_dict(path = fname, dic = datos)
+save_dict(fname = fname, dic = datos)
 
 # Volvemos a graficar para corroborar que estén los datos
-datos_leidos = load_dict(path = fname)
+datos_leidos = load_dict(fname = fname)
 fig, ax = plt.subplots(nrows= 1,ncols = 1)
 ax.scatter(datos_leidos['corriente_t'].reshape(-1), datos_leidos['tension_glow'].reshape(-1), color = 'red', label = 'ida')
 ax.scatter(datos_leidos['corriente_t_v'].reshape(-1), datos_leidos['tension_glow_v'].reshape(-1), color = 'blue', label = 'vuelta')
@@ -196,16 +201,22 @@ fig, ax = plt.subplots(nrows= 1, ncols = 1)
 # for i in range(1, num + 1):
     # fname = f'C:\GRUPO8\medicion_{i}.pkl'
 fname = f'C:/repos/labo_5/input/glow/medicion_{i}.pkl'
-datos_leidos = load_dict(path = fname)
-ax.scatter(datos_leidos['corriente_t'], datos_leidos['tension_glow'], label = 'tantos mbar')
-
-# ax.scatter(datos_leidos['corriente_t'].reshape(-1), datos_leidos['tension_glow'].reshape(-1), label = 'ida')
-# ax.scatter(datos_leidos['corriente_t_v'].reshape(-1), datos_leidos['tension_glow_v'].reshape(-1), color = 'blue', label = 'vuelta')
+datos_leidos = load_dict(fname = fname)
+ax.scatter(datos_leidos['corriente_t'], datos_leidos['tension_glow'], label = f'{datos_leidos['Pr']} mbar', s = 2)
+ini_flechas_x, ini_flechas_y = np.roll(datos_leidos['corriente_t'], 1), np.roll(datos_leidos['tension_glow'], 1)
+fin_flechas_x = np.concatenate((datos_leidos['corriente_t'][:-1],np.array([datos_leidos['corriente_t'][-2]])))
+fin_flechas_y = np.concatenate((datos_leidos['tension_glow'][:-1],np.array([datos_leidos['tension_glow'][-2]]))) 
+for X_f, Y_f, X_i, Y_i in zip(fin_flechas_x, fin_flechas_y, ini_flechas_x, ini_flechas_y):
+    ax.annotate(text = "",
+    xy = (X_f,Y_f), 
+    xytext = (X_i,Y_i),
+    arrowprops = {'arrowstyle': "->", 'color':f'{c}'},
+    size = 7
+    )
 ax.set_xlabel('Corriente [A]')
 ax.set_ylabel('Tension [V]')
 fig.legend()
 fig.show()
-
 
 import pandas as pd
 df = pd.DataFrame.from_dict({'x' : [0,3,8,7,5,3,2,1],

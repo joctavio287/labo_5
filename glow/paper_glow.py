@@ -15,19 +15,23 @@ datos_vuelta = np.loadtxt(fname = os.path.join(input_path + os.path.normpath('/f
 datos = np.concatenate((datos_ida, np.flip(m = datos_vuelta, axis = 0)), axis = 0)
 
 fig, ax = plt.subplots(nrows = 1, ncols = 1)
-ax.scatter(datos_ida[:, 0], datos_ida[:, 1], s = 2,color = 'red', label = 'ida')
-ax.scatter(datos_vuelta[:, 0], datos_vuelta[:, 1], s = 2, color = 'green', label = 'vuelta')
+ax.scatter(datos_ida[:, 0], datos_ida[:, 1], s = 2, color = 'red')
+# ax.plot(datos_ida[:, 0], datos_ida[:, 1], color = 'red', label = 'Ida')
+ax.scatter(datos_vuelta[:, 0], datos_vuelta[:, 1], s = 2, color = 'green')
+# ax.plot(datos_vuelta[:, 0], datos_vuelta[:, 1], color = 'green', label = 'Vuelta')
 # ax.scatter(datos[:, 0], datos[:, 1], s = 2)
-ini_flechas_x, ini_flechas_y = datos[:, 0], datos[:, 1]
-fin_flechas_x, fin_flechas_y = np.roll(datos[:, 0], -1), np.roll(datos[:, 1], -1)
-for X_f, Y_f, X_i, Y_i in zip(fin_flechas_x, fin_flechas_y, ini_flechas_x, ini_flechas_y):
-    ax.annotate(text = "",
-    xy = (X_f,Y_f), 
-    xytext = (X_i,Y_i),
-    arrowprops = dict(arrowstyle = "->"),#, color = c),
-    size = 7
-    )
+# ini_flechas_x, ini_flechas_y = datos[:, 0], datos[:, 1]
+# fin_flechas_x, fin_flechas_y = np.roll(datos[:, 0], -1), np.roll(datos[:, 1], -1)
+# for X_f, Y_f, X_i, Y_i in zip(fin_flechas_x, fin_flechas_y, ini_flechas_x, ini_flechas_y):
+#     ax.annotate(text = "",
+#     xy = (X_f,Y_f), 
+#     xytext = (X_i,Y_i),
+#     arrowprops = dict(arrowstyle = "->"),#, color = c),
+#     size = 7
+#     )
 ax.grid(visible = True)
+ax.set_xlabel('Intensidad de corriente [mA]')
+ax.set_ylabel('Tension [V]')
 fig.legend()
 fig.show()
 

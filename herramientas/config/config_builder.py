@@ -1,4 +1,15 @@
-import yaml, argparse, os, pickle
+import yaml, argparse, os, pickle, numpy as np
+
+def guardar_csv(*data, filename, root='.\\', delimiter=',', header='', rewrite=False):
+    isfile = os.path.isfile(root+filename+'.csv')
+    if not rewrite and isfile:
+        print('Este archivo ya existe, para sobreescribirlo usar el argumento rewrite')
+        return
+    if isfile:
+        print('ATENCIÓN: SE SOBREESCRIBIÓ EL ARCHIVO')
+    np.savetxt(root+filename+'.csv', np.transpose(np.array([*data])), header=header, delimiter=delimiter)
+    return
+
 def save_dict(fname:str, dic:dict, rewrite: bool = False):
     '''
     Para salvar un diccionario en formato pickle. 

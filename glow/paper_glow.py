@@ -15,9 +15,9 @@ datos_vuelta = np.loadtxt(fname = os.path.join(input_path + os.path.normpath('/f
 datos = np.concatenate((datos_ida, np.flip(m = datos_vuelta, axis = 0)), axis = 0)
 
 fig, ax = plt.subplots(nrows = 1, ncols = 1)
-ax.scatter(datos_ida[:, 0], datos_ida[:, 1], s = 2, color = 'red')
+ax.scatter(datos_ida[:, 0], datos_ida[:, 1], s = 2, color = 'red', label = 'Subiendo')
 # ax.plot(datos_ida[:, 0], datos_ida[:, 1], color = 'red', label = 'Ida')
-ax.scatter(datos_vuelta[:, 0], datos_vuelta[:, 1], s = 2, color = 'green')
+ax.scatter(datos_vuelta[:, 0], datos_vuelta[:, 1], s = 2, color = 'green', label = 'Bajando')
 # ax.plot(datos_vuelta[:, 0], datos_vuelta[:, 1], color = 'green', label = 'Vuelta')
 # ax.scatter(datos[:, 0], datos[:, 1], s = 2)
 # ini_flechas_x, ini_flechas_y = datos[:, 0], datos[:, 1]

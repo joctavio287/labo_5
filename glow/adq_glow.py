@@ -100,6 +100,10 @@ gen.write('SOURce1:FUNCtion:SHAPe DC')
 # Seteamos un offset puede ser en mV o V
 gen.write('SOURce1:VOLTage:LEVel:IMMediate:OFFSet 0mV')
 
+# ================================
+# MEDICIONES PARA MEDIR HISTÉRESIS
+# ================================
+
 # Seteamos la tensión de la fuente continua en 300 V
 conversor(obj = gen, tension_fuente = 300)
 
@@ -150,7 +154,6 @@ fig.legend()
 fig.show()
 
 # Guardamos los datos
-
 num = 4
 Pr, L = 0.38 , 44.04
 datos = { 
@@ -193,7 +196,6 @@ ax.grid(visible = True)
 fig.legend()
 fig.show()
 
-
 # Graficamos todas las mediciones juntas
 cmap = plt.get_cmap('plasma')
 cmap_values = np.linspace(0., 1., num)
@@ -221,4 +223,122 @@ ax.grid(visible = True)
 ax.set_xlabel('Corriente [A]')
 ax.set_ylabel('Tension [V]')
 fig.legend()
+fig.show()
+
+# ==============================
+# MEDICIONES PARA MEDIR PASCHEN:
+# Procedimiento: para levantar la curva, tomar un valor fijo de presión que sea mediano e iterar
+# sobre mínimo 20-30 valores de distancia (cosa que no se nos apague para distancias altas, pero
+# que también veamos una burna intensidad de glow). Vi los datos del grupo anterior y los valore
+# s de p*d andan en el intervalo (0.1, 1.8) [cm.mbar] (que es lo mismo que (1e-6,1.8e-5)m.bar). 
+# También mencionan que para tener un buen ajuste resulta conveniente tener varios puntos cercan
+# os al origen (0.1).
+# Si fijamos la presión en ~.2 mbares podemos tomar valores de d = np.arange(0.5, 8.5, .25) cm y
+# tendriamos los siguientes valores de pd = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.
+# 55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.
+# 4, 1.45, 1.5, 1.55, 1.6, 1.65].
+# Para cada valor de pd hacer un barrido grosero de tensión registrando (a ojo) donde se dan las
+# rupturas y después volver a tomar la medición pero iterando sobre muchos valores cercanos a la
+# tensión de ruptura que vimos a ojo para tener más definición de este valor. 
+# ==============================
+# Para chequear la tira de valores pd
+# tira_pd = []
+# for j, l in enumerate(np.arange(.5, 8.5, .25)):
+#     j, l*0.2
+#     tira_pd.append(l*.2)
+# =================================
+# Encontramos la tensión de ruptura
+# =================================
+
+# Seteamos la tensión de la fuente continua en 300 V
+tension_inicial = 100
+conversor(obj = gen, tension_fuente = tension_inicial)
+
+# Iteramos por distintos valores en la tensión de la fuente de entrada para ver dónde está la ruptura a ojo
+tension_iter = np.linspace(tension_inicial, 500, 20)
+for tension in tension_iter:
+    conversor(obj = gen, tension_fuente = tension)
+
+# Una vez fijado ese valor tomamos una tensión de iteración entorno a ese valor más fina
+ruptura_a_ojo = 250
+conversor(obj = gen, tension_fuente = tension_inicial)
+
+tension_R0 = []
+tension_R1 = []
+tension_iter = np.linspace(ruptura_a_ojo-30, ruptura_a_ojo+30, 100)
+
+for tension in tension_iter:
+    conversor(obj = gen, tension_fuente = tension)
+    tension_R1.append(float(mult1.query('MEASURE:VOLTage:DC?'))) # V
+    tension_R0.append(float(mult2.query('MEASURE:VOLTage:DC?'))) # V
+
+# Convertimos a corriente teniendo en cuenta el valor de las resistencias
+tension_R0 = np.array(tension_R0)
+tension_R1 = np.array(tension_R1)
+corriente_1 = tension_R0/150 # A
+corriente_2 = tension_R1/56000 # A
+corriente_t = corriente_1 + corriente_2 # A
+
+# La tensión del gas
+tension_glow = tension_iter - corriente_1*(30000 + 150) - corriente_2*30000
+
+# Ver en qué valor la diferencia es alta y asignar el valor anterior a ruptura
+corriente_t = np.array([1,2,3,70,80,90,10,-1,100])
+diferencia = np.diff(corriente_t)
+corriente_t.shape,diferencia.shape
+indice_ruptura = np.argmax(diferencia)
+ruptura = tension_glow[indice_ruptura]
+
+# Graficamos para ver que este valor tiene sentido
+fig, ax = plt.subplots(nrows= 1,ncols = 1)
+ax.axhline(y = tension_glow[indice_ruptura], xmin = 0, xmax = 1, color = 'red', label = 'Tensión de ruptura')
+ax.scatter(corriente_t, tension_glow, s = 2, color = 'blue', label = 'Curva IV')
+ax.set_xlabel('Intensidad de corriente [A]')
+ax.set_ylabel('Tension entre electrodos [V]')
+ax.grid(visible = True)
+fig.legend()
+fig.show()
+
+# Guardamos los datos
+num = 1
+Pr, L = 0.2 , .5
+datos = { 
+'unidades': f'Medimos la tension de ruptura. Pr: {Pr} mbar; L: ({L} +- .01) mm. La tensión está en V, la corriente en A',
+'presion' : Pr,
+'tension_entrada': tension_iter.reshape(-1,1),
+'tension_r0': tension_R0.reshape(-1,1),
+'tension_r1': tension_R1.reshape(-1,1),
+'tension_glow': tension_glow.reshape(-1,1),
+'corriente_1': corriente_1.reshape(-1,1),
+'corriente_2': corriente_2.reshape(-1,1),
+'corriente_t': corriente_t.reshape(-1,1),
+'pd': Pr*L,
+'ruptura': ruptura
+}
+
+fname = f'C:\GRUPO8\medicion_paschen_{num}.pkl'
+save_dict(fname = fname, dic = datos)
+
+# Volvemos a graficar para corroborar que estén los datos
+datos_leidos = load_dict(fname = fname)
+fig, ax = plt.subplots(nrows= 1,ncols = 1)
+ax.axhline(y = datos_leidos['ruptura'], xmin = 0, xmax = 1, color = 'red', label = 'Tensión de ruptura')
+ax.scatter(datos_leidos['corriente_t'], datos_leidos['tension_glow'], 
+           s = 2, color = 'blue', label = 'Curva IV')
+ax.set_xlabel('Intensidad de corriente [A]')
+ax.set_ylabel('Tension entre electrodos [V]')
+ax.grid(visible = True)
+fig.legend()
+fig.show()
+
+
+# Levantamos la curva de Paschen obtenida hasta ahora:
+fig, ax = plt.subplots(nrows = 1, ncols = 1)
+for i in range(1, num+1):
+    fname = f'C:\GRUPO8\medicion_paschen_{i}.pkl'
+    datos_i = load_dict(fname = fname)
+    ax.scatter(datos_i['pd'], datos_i['ruptura'], s = 2)
+ax.set_xlabel('Presión x distancia [mbar x cm]')
+ax.set_ylabel('Tension de ruptura [V]')
+ax.grid(visible = True)
 fig.show()

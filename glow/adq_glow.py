@@ -112,7 +112,7 @@ tension_R0 = []
 tension_R1 = []
 tension_R0_v = []
 tension_R1_v = []
-tension_iter = np.linspace(300,720,100)
+tension_iter = np.linspace(300, 720, 100)
 
 for tension in tension_iter:
     conversor(obj = gen, tension_fuente = tension)
@@ -250,26 +250,24 @@ fig.show()
 # Encontramos la tensión de ruptura
 # =================================
 
-# Seteamos la tensión de la fuente continua en 300 V
-tension_inicial = 100
+# Seteamos la tensión de la fuente continua en 0 V # Termalizamos
+tension_inicial = 0
 conversor(obj = gen, tension_fuente = tension_inicial)
 
-# Iteramos por distintos valores en la tensión de la fuente de entrada para ver dónde está la ruptura a ojo
-tension_iter = np.linspace(tension_inicial, 500, 20)
-for tension in tension_iter:
-    conversor(obj = gen, tension_fuente = tension)
+tension_inicial = 260
+conversor(obj = gen, tension_fuente = tension_inicial)
+
+tension_inicial += 10
+conversor(obj = gen, tension_fuente = tension_inicial)
 
 # Una vez fijado ese valor tomamos una tensión de iteración entorno a ese valor más fina
-ruptura_a_ojo = 250
-conversor(obj = gen, tension_fuente = tension_inicial)
-
+ruptura_a_ojo, ventana = 350, 20
+tension_iter = np.arange(ruptura_a_ojo-ventana, ruptura_a_ojo+ventana, 1)
 tension_R0 = []
 tension_R1 = []
-tension_iter = np.linspace(ruptura_a_ojo-30, ruptura_a_ojo+30, 100)
-
 for tension in tension_iter:
     conversor(obj = gen, tension_fuente = tension)
-    tension_R1.append(float(mult1.query('MEASURE:VOLTage:DC?'))) # V
+    tension_R1.append(float(mult1.query('MEASURE:VOLTage:DC?'))) # V # TODO CHEQUEAR QUE HAYA CORRESPONDENCIA
     tension_R0.append(float(mult2.query('MEASURE:VOLTage:DC?'))) # V
 
 # Convertimos a corriente teniendo en cuenta el valor de las resistencias
@@ -283,9 +281,7 @@ corriente_t = corriente_1 + corriente_2 # A
 tension_glow = tension_iter - corriente_1*(30000 + 150) - corriente_2*30000
 
 # Ver en qué valor la diferencia es alta y asignar el valor anterior a ruptura
-corriente_t = np.array([1,2,3,70,80,90,10,-1,100])
 diferencia = np.diff(corriente_t)
-corriente_t.shape,diferencia.shape
 indice_ruptura = np.argmax(diferencia)
 ruptura = tension_glow[indice_ruptura]
 
@@ -300,11 +296,13 @@ fig.legend()
 fig.show()
 
 # Guardamos los datos
-num = 1
-Pr, L = 0.2 , .5
+num = 17
+Pr, L = 0.49 , 12.63 
 datos = { 
-'unidades': f'Medimos la tension de ruptura. Pr: {Pr} mbar; L: ({L} +- .01) mm. La tensión está en V, la corriente en A',
+'unidades': f'Medimos la tension de ruptura. Pr: {Pr} mbar; L: ({L} +- .1) mm. La tensión está en V, la corriente en A',
 'presion' : Pr,
+'distancia': L,
+'pd': Pr*L,
 'tension_entrada': tension_iter.reshape(-1,1),
 'tension_r0': tension_R0.reshape(-1,1),
 'tension_r1': tension_R1.reshape(-1,1),
@@ -312,7 +310,6 @@ datos = {
 'corriente_1': corriente_1.reshape(-1,1),
 'corriente_2': corriente_2.reshape(-1,1),
 'corriente_t': corriente_t.reshape(-1,1),
-'pd': Pr*L,
 'ruptura': ruptura
 }
 
@@ -331,13 +328,12 @@ ax.grid(visible = True)
 fig.legend()
 fig.show()
 
-
 # Levantamos la curva de Paschen obtenida hasta ahora:
 fig, ax = plt.subplots(nrows = 1, ncols = 1)
 for i in range(1, num+1):
     fname = f'C:\GRUPO8\medicion_paschen_{i}.pkl'
     datos_i = load_dict(fname = fname)
-    ax.scatter(datos_i['pd'], datos_i['ruptura'], s = 2)
+    ax.scatter(datos_i['pd']/10, datos_i['ruptura'], s = 10)
 ax.set_xlabel('Presión x distancia [mbar x cm]')
 ax.set_ylabel('Tension de ruptura [V]')
 ax.grid(visible = True)

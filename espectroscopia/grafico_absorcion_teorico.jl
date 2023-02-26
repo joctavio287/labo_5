@@ -1,6 +1,6 @@
 using Plots, Distributions
 cd("H:\\OneDrive\\Facu\\Labo 5\\labo_5\\output") #no encontré forma mejor de hacer esto
-x = range(-5, 5, 100)
+x = range(-5, 5, 500)
 
 abs = pdf.(Normal(0, 1), x)
 abs_izq = pdf.(Normal(-1, 1.5), x)

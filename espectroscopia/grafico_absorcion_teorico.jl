@@ -1,5 +1,5 @@
 using Plots, Distributions
-
+cd("H:\\OneDrive\\Facu\\Labo 5\\labo_5\\output") #no encontré forma mejor de hacer esto
 x = range(-5, 5, 100)
 
 abs = pdf.(Normal(0, 1), x)
@@ -14,4 +14,4 @@ plot!(x, abs_der, label="Cir. der.", lw=2)
 plot!(x, abs_izq-abs_der, label="Señal DAVS", lw=2)
 xlabel!("Frecuencia (a.u.)")
 ylabel!("Absorción (a.u.)")
-savefig("myplot.png")
+savefig("absorcion.svg")

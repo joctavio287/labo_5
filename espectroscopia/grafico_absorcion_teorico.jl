@@ -6,7 +6,7 @@ abs = pdf.(Normal(0, 1), x)
 abs_izq = pdf.(Normal(-1, 1.5), x)
 abs_der = pdf.(Normal(1, 1.5), x)
 
-plot(x, abs, label="Sin campo", lw=2,
+plot(x, abs, label="Sin campo", lw=2, linecolor="purple",
  formatter=Returns(""), legendfontsize=10,
  xguidefontsize=15, yguidefontsize=15)
 plot!(x, abs_izq, label="Cir. izq.", lw=2)

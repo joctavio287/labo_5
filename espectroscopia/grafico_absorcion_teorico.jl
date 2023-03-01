@@ -6,12 +6,12 @@ abs = pdf.(Normal(0, 1), x)
 abs_izq = pdf.(Normal(-1, 1.5), x)
 abs_der = pdf.(Normal(1, 1.5), x)
 
-plot(x, abs, label="Sin campo", lw=2, linecolor="purple",
+plot(x, abs, label="Sin campo", lw=2, lc="black",
  formatter=Returns(""), legendfontsize=10,
  xguidefontsize=15, yguidefontsize=15)
-plot!(x, abs_izq, label="Cir. izq.", lw=2)
-plot!(x, abs_der, label="Cir. der.", lw=2)
-plot!(x, abs_izq-abs_der, label="Señal DAVS", lw=2)
+plot!(x, abs_izq, label="Cir. izq.", lw=2, lc="red")
+plot!(x, abs_der, label="Cir. der.", lw=2, lc="blue")
+plot!(x, abs_izq-abs_der, label="Señal DAVS", lw=2, lc="green")
 xlabel!("Frecuencia (a.u.)")
 ylabel!("Absorción (a.u.)")
 savefig("absorcion.svg")

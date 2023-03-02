@@ -281,13 +281,14 @@ corriente_t = corriente_1 + corriente_2 # A
 tension_glow = tension_iter - corriente_1*(30000 + 150) - corriente_2*30000
 
 # Ver en qué valor la diferencia es alta y asignar el valor anterior a ruptura
-diferencia = np.diff(corriente_t)
-indice_ruptura = np.argmax(diferencia)
-ruptura = tension_glow[indice_ruptura]
+# diferencia = np.diff(corriente_t)
+# indice_ruptura = np.argmax(diferencia)
+# ruptura = tension_glow[indice_ruptura]
+ruptura  = tension_glow.max()
 
 # Graficamos para ver que este valor tiene sentido
 fig, ax = plt.subplots(nrows= 1,ncols = 1)
-ax.axhline(y = tension_glow[indice_ruptura], xmin = 0, xmax = 1, color = 'red', label = 'Tensión de ruptura')
+ax.axhline(y = ruptura, xmin = 0, xmax = 1, color = 'red', label = 'Tensión de ruptura')
 ax.scatter(corriente_t, tension_glow, s = 2, color = 'blue', label = 'Curva IV')
 ax.set_xlabel('Intensidad de corriente [A]')
 ax.set_ylabel('Tension entre electrodos [V]')

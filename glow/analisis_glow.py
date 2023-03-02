@@ -136,3 +136,46 @@ plt.show(block = False)
 # plt.savefig(os.path.join(output_path + os.path.normpath('/espectro__he_16.png')))
 # =========================================
 # =========================================
+
+
+# =======================================================
+# Graficamos todas las mediciones juntas de histéresis He
+# =======================================================
+
+# Ultima medicion efectuada
+num = 4
+
+# Graficamos todas las mediciones juntas de histéresis
+cmap = plt.get_cmap('plasma')
+cmap_values = np.linspace(0., 1., num)
+colors = cmap(cmap_values)
+colors_rgb = ['#{0:02x}{1:02x}{2:02x}'.format(int(255*a), int(255*b), int(255*c)) for a, b, c, _ in colors]
+
+plt.figure()
+dic = {1:4,2:3,3:3, 4:3}
+for c, i in zip(colors_rgb, np.arange(1, num + 1 , 1)): # for i in range(1, num + 1):
+    fname = os.path.join(input_path + os.path.normpath(f'/medicion_helio_{i}.pkl'))
+    datos_leidos = load_dict(fname = fname)
+    pr = datos_leidos['presion']
+    corriente = 1000*datos_leidos['corriente_t']
+    plt.plot(corriente, datos_leidos['tension_glow'], '-.',label = f'{pr} mbar', color = c)
+    ini_flechas_x = [corriente[len(corriente)//dic[i]],corriente[len(corriente)*2//3]]
+    ini_flechas_y = [datos_leidos['tension_glow'][len(datos_leidos['tension_glow'])//dic[i]],datos_leidos['tension_glow'][len(datos_leidos['tension_glow'])*2//3]]
+    fin_flechas_x = [corriente[len(corriente)//dic[i] + 3],corriente[len(corriente)*2//3+3]]
+    fin_flechas_y = [datos_leidos['tension_glow'][len(datos_leidos['tension_glow'])//dic[i]+3],datos_leidos['tension_glow'][len(datos_leidos['tension_glow'])*2//3+3]]
+    for X_f, Y_f, X_i, Y_i in zip(fin_flechas_x, fin_flechas_y, ini_flechas_x, ini_flechas_y):
+        plt.annotate(text = "",
+        xy = (X_f,Y_f), 
+        xytext = (X_i,Y_i),
+        arrowprops = dict(arrowstyle = "->"),#, color = c),
+        size = 25
+        )
+plt.grid(visible = True)
+plt.xlabel('Corriente [mA]')
+plt.ylabel('Tension [V]')
+plt.legend(loc = 'best')
+plt.tight_layout()
+plt.show(block = False)
+# plt.savefig(fname = os.path.join(output_path + os.path.normpath('/mediciones_VI_helio.png')))
+# =======================================================
+# =======================================================

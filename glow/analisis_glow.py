@@ -49,3 +49,25 @@ plt.show(block = False)
 
 # ====================================================
 # ====================================================
+
+# ================================================
+# Graficamos la tensión de ruptura Paschen ejemplo 
+# ================================================
+i = 1
+fname = os.path.join(input_path + os.path.normpath(f'/medicion_paschen_{i}.pkl'))
+datos_leidos = load_dict(fname = fname)
+
+plt.figure()
+plt.hlines(y = datos_leidos['ruptura'], xmin = 0, xmax = 1, color = 'red', label = 'Tensión de ruptura')
+# Transformo a mA
+corriente = datos_leidos['corriente_t']*1000
+plt.scatter(corriente, datos_leidos['tension_glow'], s = 2, color = 'blue', label = 'Curva IV')
+plt.xlabel('Intensidad de corriente [mA]')
+plt.ylabel('Tension entre electrodos [V]')
+plt.grid(visible = True)
+plt.legend(loc = 'best')
+plt.show(block = False)
+# plt.savefig(os.path.join(output_path + os.path.normpath('/tension_ruptura_ej.png')))
+
+# ================================================
+# ================================================

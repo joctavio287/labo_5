@@ -58,16 +58,81 @@ fname = os.path.join(input_path + os.path.normpath(f'/medicion_paschen_{i}.pkl')
 datos_leidos = load_dict(fname = fname)
 
 plt.figure()
-plt.hlines(y = datos_leidos['ruptura'], xmin = 0, xmax = 1, color = 'red', label = 'Tensión de ruptura')
+plt.hlines(y = datos_leidos['ruptura'], xmin = 0, xmax = datos_leidos['corriente_t'][-1]*1000, color = 'red', label = 'Tensión de ruptura')
 # Transformo a mA
 corriente = datos_leidos['corriente_t']*1000
 plt.scatter(corriente, datos_leidos['tension_glow'], s = 2, color = 'blue', label = 'Curva IV')
 plt.xlabel('Intensidad de corriente [mA]')
 plt.ylabel('Tension entre electrodos [V]')
 plt.grid(visible = True)
-plt.legend(loc = 'best')
+plt.legend(loc = 'lower left')
 plt.show(block = False)
 # plt.savefig(os.path.join(output_path + os.path.normpath('/tension_ruptura_ej.png')))
 
 # ================================================
 # ================================================
+
+# =========================================
+# Respuesta de la tensión al glow: cuaderno 
+# =========================================
+fname = os.path.join(input_path + os.path.normpath(f'/medicion_osciloscopio.pkl'))
+datos_leidos = load_dict(fname = fname)
+
+plt.figure()
+plt.scatter(datos_leidos['tiempo'], datos_leidos['tension'], s = 2, color = 'blue', label = 'Respuesta en tensión al Glow')
+plt.xlabel('Tiempo [s]')
+plt.ylabel('Tension [V]')
+plt.grid(visible = True)
+plt.legend(loc = 'best')
+plt.show(block = False)
+# plt.savefig(os.path.join(output_path + os.path.normpath('/respuesta_osci.png')))
+# =========================================
+# =========================================
+
+# =========================================
+# Espectrograma de la luz del aire y del He 
+# =========================================
+helio_0_64 = 'espectro_helio_0.64mbar.csv'
+helio_0_16 = 'espectro_helio_0.16mbar.csv'
+aire = 'espectro_aire.csv'
+
+# Aire 1.6 mbar
+fname = os.path.join(input_path + os.path.normpath(f'/{aire}'))
+datos_leidos = np.loadtxt(fname = fname, delimiter = ';', skiprows=33)
+frecuencia, intensidad = datos_leidos[:,0].reshape(-1,1), datos_leidos[:,1].reshape(-1,1)
+plt.figure()
+plt.plot(frecuencia, intensidad, '-', label = 'Aire 1,6 mbar')
+plt.xlabel('Tiempo [s]')
+plt.ylabel('Tension [V]')
+plt.grid(visible = True)
+plt.legend(loc = 'best')
+plt.show(block = False)
+# plt.savefig(os.path.join(output_path + os.path.normpath('/espectro_aire.png')))
+
+# Helio .64 mbar
+fname = os.path.join(input_path + os.path.normpath(f'/{helio_0_64}'))
+datos_leidos = np.loadtxt(fname = fname, delimiter = ',', skiprows=33)
+frecuencia, intensidad = datos_leidos[:,0].reshape(-1,1), datos_leidos[:,1].reshape(-1,1)
+plt.figure()
+plt.plot(frecuencia, intensidad, '-', label = 'Helio 0,64 mbar')
+plt.xlabel('Tiempo [s]')
+plt.ylabel('Tension [V]')
+plt.grid(visible = True)
+plt.legend(loc = 'best')
+plt.show(block = False)
+# plt.savefig(os.path.join(output_path + os.path.normpath('/espectro_he_64.png')))
+
+# Helio .16 mbar
+fname = os.path.join(input_path + os.path.normpath(f'/{helio_0_16}'))
+datos_leidos = np.loadtxt(fname = fname, delimiter = ',', skiprows=33)
+frecuencia, intensidad = datos_leidos[:,0].reshape(-1,1), datos_leidos[:,1].reshape(-1,1)
+plt.figure()
+plt.plot(frecuencia, intensidad, '-', label = 'Helio 0,16 mbar')
+plt.xlabel('Tiempo [s]')
+plt.ylabel('Tension [V]')
+plt.grid(visible = True)
+plt.legend(loc = 'best')
+plt.show(block = False)
+# plt.savefig(os.path.join(output_path + os.path.normpath('/espectro__he_16.png')))
+# =========================================
+# =========================================

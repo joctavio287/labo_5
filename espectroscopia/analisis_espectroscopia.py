@@ -390,7 +390,7 @@ for i in [4,8,9,12,13,19]:
     clicks_2 = fig.ginput(n = -1, timeout = -1)
     clicks_x_2 = [click[0] for click in clicks_2]
 
-    error_picos_2 = np.array([error_frej/2cuencias[find_nearest(frecuencias, clicks_x_2[1])], error_frecuencias[find_nearest(frecuencias, clicks_x_2[0])]]).reshape(-1,1)
+    error_picos_2 = np.array([error_frecuencias[find_nearest(frecuencias, clicks_x_2[1])], error_frecuencias[find_nearest(frecuencias, clicks_x_2[0])]]).reshape(-1,1)
     error_anchos_2 = Propagacion_errores(formula = 'a_1-a_0', variables = [('a_1', clicks_x_2[1]),('a_0', clicks_x_2[0])], errores = error_picos_2).fit()[1]
 
     anchos_2[datos['temperatura_rb']] = clicks_x_2[1]-clicks_x_2[0], error_anchos_2

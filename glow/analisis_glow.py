@@ -1,5 +1,7 @@
 import os, matplotlib.pyplot as plt, numpy as np
 from herramientas.config.config_builder import Parser, save_dict, load_dict
+from labos.ajuste import Ajuste
+from labos.propagacion import Propagacion_errores
 
 # Importo los paths
 glob_path = os.path.normpath(os.getcwd())
@@ -179,3 +181,50 @@ plt.show(block = False)
 # plt.savefig(fname = os.path.join(output_path + os.path.normpath('/mediciones_VI_helio.png')))
 # =======================================================
 # =======================================================
+
+# ===================================================
+# Levantamos la curva de Paschen e intentamos ajustar
+# ===================================================
+
+# Armo dos arrays con los datos de presión por distancia y otro de tensión de ruptura
+rupturas = []
+pds = []
+for i in range(1, 26):
+    fname = os.path.join(input_path + os.path.normpath(f'/medicion_paschen_{i}.pkl'))
+    datos_i = load_dict(fname = fname)
+    rupturas.append(datos_i['ruptura'])
+    pds.append(datos_i['pd']/10)
+
+# Transformo a arrays
+rupturas = np.array(rupturas).reshape(-1,1)
+pds = np.array(pds).reshape(-1,1)
+
+# Propago el error de las rupturas
+# ERROR TODO
+
+# Hago el ajuste
+def func(x, a_0, a_1, a_2):
+    return a_0*(x)/(np.log(a_1*x) - np.log(a_2))
+
+formula_de_paschen = 'a_0*(x)/(np.log(a_1*x) + np.log(a_2))'
+# (e *exp(a_2))/a_1 es el minimo que es aprox 0.63
+# cuando tiende a infinito x, crece como a_0*x/a_1
+ajuste = Ajuste(x = pds, y = rupturas, cov_y = np.full(shape = rupturas.shape, fill_value = 1))
+ajuste.fit(formula = formula_de_paschen, p0 = [600, 3, .2])
+a_0, a_1, a_2 = ajuste.parametros
+(np.e*a_2)/a_1
+# Ploteo
+pds_auxiliar = np.linspace(pds[0][0],pds[-1][0],1000)
+
+fig, ax = plt.subplots(nrows = 1, ncols = 1)
+ax.scatter(pds, rupturas, color = 'blue', s = 10)
+ax.plot(pds_auxiliar, func(pds_auxiliar, a_0, a_1, a_2))
+ax.set_xlabel('Presión x distancia [mbar x cm]')
+ax.set_ylabel('Tension de ruptura [V]')
+ax.grid(visible = True)
+fig.show()
+
+
+
+# ===================================================
+# ===================================================

@@ -1,7 +1,8 @@
 # Importo paquetes
 import time, numpy as np, pickle, os
 from matplotlib import pyplot as plt
-from labos import 
+from scipy.signal import find_peaks
+from labos.notificacion_bot import mensaje_tel
 
 import pyvisa # VISA (Virtual instrument software architecture)
 
@@ -139,28 +140,118 @@ def medir(inst, channel:int = 1):
     return tiempo, data
 
 # =============================================================================
-#
+# Encontrar el umbral
 # =============================================================================
 numero_de_mediciones = 100
-carpeta = 'laser_prendido'
+carpeta = 'laser_1_50'
 os.mkdir(f'C:/GRUPO 8/{carpeta}')
-# umbral = -.0015
+umbral =  0.0001
 t_0 = time.time()
 for i in range(numero_de_mediciones):
-        
+    print(f'Así de ansiosos estamos: {i+1}/100')
     # Sacamos una foto al osciloscopio (ambos canales)
     tiempo, tension = medir(osc, 1)
     
-    # indice_picos = tension<umbral
-    # tiempo_picos = tiempo[tension<umbral]
-    # tension_picos = tension[tension<umbral]              
+    # Sacamos los indices   
+    indice_picos = find_peaks(-tension, height = umbral)[0]
+    tiempo_picos = tiempo[indice_picos]
+    tension_picos = tension[indice_picos]
+    
     
     # Creamos un diccionario para organizar y documentar los datos
     fname = f'C:/GRUPO 8/{carpeta}/medicion_{i}.pkl'
 
-    tension_PMT, escala_v, escala_h, angulo_polarizador = '900 V', '5 mV', '250 ns', '80 º'
+    tension_PMT, escala_v, escala_h, angulo_polarizador, resistencia = '900 V', '5 mV', '250 ns', '315 º', '50 Ohms'
     medicion = {
-    'unidades': f'Numero de mediciones {numero_de_mediciones}. -OSC: VERT: CH1: {escala_v}; HOR: {escala_h}. -PMT: {tension_PMT}. -Polarizador: {angulo_polarizador}',
+    'unidades': f'-Numero de mediciones {numero_de_mediciones} y umbral en {umbral} V.-RES: {resistencia} -OSC: VERT: CH1: {escala_v}; HOR: {escala_h}. -PMT: {tension_PMT}. -Polarizador: {angulo_polarizador}',
+    'tiempo': tiempo,
+    'tension': tension,
+    'indice_picos':indice_picos,
+    'tiempo_picos':tiempo_picos,
+    'tension_picos':tension_picos
+     }
+    
+    # Graficar un dato
+    plt.figure()
+    plt.plot(medicion['tiempo'], medicion['tension'], color = 'red')
+    # plt.scatter(medicion['tiempo_picos'], medicion['tension_picos'])
+    plt.grid(visible = True)
+    plt.xlabel('Tiempo [s]')
+    plt.ylabel('Tensión [V]')
+    plt.show(block = False)
+
+    # Los guardamos
+    save_dict(fname = fname, dic = medicion)
+tardada = time.time()-t_0
+print(tardada)
+
+# Histograma: poner aproximadamente este valor en el paso float(escala_v.split(' mV')[0])/256
+paso = 0.00020
+maximo_altura = 0.015
+bins = np.arange(-maximo_altura, maximo_altura + paso, paso)
+
+# Laser
+tensiones = []
+for i, f in enumerate(os.listdir(f'C:/GRUPO 8/{carpeta}/')):
+    medicion = load_dict(fname = f'C:/GRUPO 8/{carpeta}/' + f)
+    tensiones.append(medicion['tension_picos'].reshape(-1,1))
+tensiones = np.concatenate(tensiones, axis = 0)
+
+# Ruido
+tensiones_ruido = []
+for i, f in enumerate(os.listdir('C:/GRUPO 8/ruido_50_ohms/')):
+    medicion = load_dict(fname = 'C:/GRUPO 8/ruido_50_ohms/' + f)
+    tensiones_ruido.append(medicion['tension_picos'].reshape(-1,1))
+tensiones_ruido = np.concatenate(tensiones_ruido, axis = 0)
+
+
+plt.figure()
+plt.hist(tensiones_ruido,
+         bins = bins,
+         label = "Ruido",
+         histtype = "step", 
+         color = "red")
+
+plt.hist(tensiones,
+          bins = bins,
+          label = "Laser prendido",
+          histtype = "step", 
+          color = "blue")
+plt.legend()
+plt.xlabel('Tensión [V]')
+plt.ylabel('Número de eventos')
+plt.grid(visible = True, alpha=0.3)
+plt.yscale('log')
+plt.show()
+
+# =============================================================================
+# Habiendo encontrado el umbral, hacemos estadistica
+# =============================================================================
+numero_de_mediciones = 300
+carpeta = 'laser_prendido_4'
+os.mkdir(f'C:/GRUPO 8/{carpeta}')
+umbral =  0.004
+t_0 = time.time()
+for i in range(numero_de_mediciones):
+    print(f'Así de ansiosos estamos: {i+1}/{numero_de_mediciones}')
+    if i == numero_de_mediciones//2:
+        print('VAMO ROJO LOCOOO DALEEE QUE YA VA POR LA MITAD')
+        
+    # Sacamos una foto al osciloscopio (ambos canales)
+    tiempo, tension = medir(osc, 1)
+    
+    # Sacamos los indices   
+    indice_picos = find_peaks(-tension, height = umbral)[0]
+    tiempo_picos = tiempo[indice_picos]
+    tension_picos = tension[indice_picos]
+    
+    
+    # Creamos un diccionario para organizar y documentar los datos
+    fname = f'C:/GRUPO 8/{carpeta}/medicion_{i}.pkl'
+
+    tension_PMT, escala_v, escala_h, angulo_polarizador, resistencia = '900 V', '5 mV', '100 ns', '315 º', '50 Ohms'
+    medicion = {
+     'unidades': f'-Numero de mediciones {numero_de_mediciones} y umbral en {umbral} V.-RES: {resistencia} -OSC: VERT: CH1: {escala_v}; HOR: {escala_h}. -PMT: {tension_PMT}. -Polarizador: {angulo_polarizador}',
     'tiempo': tiempo,
     'tension': tension,
     'indice_picos':indice_picos,
@@ -182,41 +273,60 @@ for i in range(numero_de_mediciones):
 tardada = time.time()-t_0
 print(tardada)
 
-# Histograma
-# Poner aproximadamente este valor en el paso float(escala_v.split(' mV')[0])/256
-paso = 0.00020
-maximo_altura = 0.015
-bins = np.arange(-maximo_altura, maximo_altura + paso, paso)
+# Histograma: poner aproximadamente este valor en el paso float(escala_v.split(' mV')[0])/256
+# paso = 0.00020
+# maximo_altura = 0.015
+# bins = np.arange(-maximo_altura, maximo_altura + paso, paso)
 
 # Laser
-tensiones = []
+ocurrencias = []
 for i, f in enumerate(os.listdir(f'C:/GRUPO 8/{carpeta}/')):
     medicion = load_dict(fname = f'C:/GRUPO 8/{carpeta}/' + f)
-    tensiones.append(medicion['tension'].reshape(-1,1))
-tensiones = np.concatenate(tensiones, axis = 0)
-
-# Ruido
-tensiones_ruido = []
-for i, f in enumerate(os.listdir(f'C:/GRUPO 8/ruido/')):
-    medicion = load_dict(fname = f'C:/GRUPO 8/ruido/' + f)
-    tensiones_ruido.append(medicion['tension'].reshape(-1,1))
-tensiones_ruido = np.concatenate(tensiones_ruido, axis = 0)
-
+    # ocurrencia = len(medicion['tension_picos'])
+    ocurrencia = len(medicion['tension_picos'][medicion['tension_picos']<-umbral])
+    ocurrencias.append(ocurrencia)
+ocurrencias = np.array(ocurrencias)
+cuentas, frecuencia = np.unique(ocurrencias, return_counts = True)
+frecuencia = frecuencia/np.sum(frecuencia)
 
 plt.figure()
-plt.hist(tensiones_ruido,
-         bins = bins,
-         label = "Ruido",
-         histtype = "step", 
-         color = "red")
 
-plt.hist(tensiones,
-         bins = bins,
-         label = "Laser prendido",
-         histtype = "step", 
-         color = "blue")
+plt.bar(
+    cuentas, 
+    frecuencia,
+    label = escala_v,
+    color = "blue")
 plt.legend()
-plt.xlabel('Tensión [V]')
+plt.xlabel('Frecuencia')
 plt.ylabel('Número de eventos')
 plt.grid(visible = True, alpha=0.3)
+plt.show()
+
+# Mandamos un mensaje canchero al grupo
+mensaje_tel(
+    api_token = '5448153732:AAGhKraJQquEqMfpD3cb4rnTcrKB6U1ViMA',
+    chat_id = '-693150998',
+    mensaje = 'JUEGA BOOCA'
+    )
+
+
+
+tiempo, tension = medir(osc, 1)
+
+tension_PMT, escala_v, escala_h, angulo_polarizador, resistencia = '900 V', '50 mV', '250 ns', '315 º', '3.9k Ohms'
+medicion = {
+ 'unidades': f'-Numero de mediciones {numero_de_mediciones} y umbral en {umbral} V.-RES: {resistencia} -OSC: VERT: CH1: {escala_v}; HOR: {escala_h}. -PMT: {tension_PMT}. -Polarizador: {angulo_polarizador}',
+'tiempo': tiempo,
+'tension': tension,
+ }
+save_dict(fname = 'C:/GRUPO 8/ancho_resistencia_3900_ohms.pkl', dic = medicion)
+
+plt.figure()
+plt.plot(tiempo, tension)
+plt.show()
+
+leido = load_dict(fname = 'C:/GRUPO 8/ancho_resistencia_3900_ohms.pkl')
+
+plt.figure()
+plt.plot(leido['tiempo'], leido['tension'])
 plt.show()

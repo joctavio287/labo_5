@@ -310,7 +310,6 @@ mensaje_tel(
     )
 
 
-
 tiempo, tension = medir(osc, 1)
 
 tension_PMT, escala_v, escala_h, angulo_polarizador, resistencia = '900 V', '50 mV', '250 ns', '315 º', '3.9k Ohms'

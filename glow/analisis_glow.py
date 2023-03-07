@@ -2,6 +2,9 @@ import os, matplotlib.pyplot as plt, numpy as np
 from herramientas.config.config_builder import Parser, save_dict, load_dict
 from labos.ajuste import Ajuste
 from labos.propagacion import Propagacion_errores
+from sympy import symbols, lambdify, latex, log
+from matplotlib.widgets import Slider, Button
+from scipy.optimize import curve_fit
 
 # Importo los paths
 glob_path = os.path.normpath(os.getcwd())
@@ -139,7 +142,6 @@ plt.show(block = False)
 # =========================================
 # =========================================
 
-
 # =======================================================
 # Graficamos todas las mediciones juntas de histéresis He
 # =======================================================
@@ -182,6 +184,39 @@ plt.show(block = False)
 # =======================================================
 # =======================================================
 
+
+# ===================================================
+# Levantamos la curva de Paschen modficaada e intentamos ajustar
+# ===================================================
+
+# Armo dos arrays con los datos de presión por distancia y otro de tensión de ruptura
+rupturas = []
+p = []
+d = []
+for i in range(1, 26):
+    fname = os.path.join(input_path + os.path.normpath(f'/medicion_paschen_{i}.pkl'))
+    datos_i = load_dict(fname = fname)
+    rupturas.append(datos_i['ruptura'])
+    p.append(datos_i['presion'])
+    d.append(datos_i['pd']/(10*datos_i['presion']))
+
+# Transformo a arrays
+rupturas = np.array(rupturas)
+p = np.array(p)
+d = np.array(d)
+X = p,d
+# Propago el error de las rupturas
+
+# Defino la fórmula de Paschen:
+def func(d, a_0, a_1, a_2):
+    p = .49 *0.750062 # Torr
+    return (a_0*p+a_1*d)/(np.log(a_1*p*d))
+curve_fit(func, xdata = (p,d), ydata = rupturas, absolute_sigma = np.full(shape = rupturas.shape, fill_value = 10))
+formula_de_paschen = f'(a_0*(x)/(np.log(a_1*x) + a_2)'
+plt.figure()
+plt.scatter(pds, rupturas)
+
+
 # ===================================================
 # Levantamos la curva de Paschen e intentamos ajustar
 # ===================================================
@@ -200,31 +235,31 @@ rupturas = np.array(rupturas).reshape(-1,1)
 pds = np.array(pds).reshape(-1,1)
 
 # Propago el error de las rupturas
-# ERROR TODO
 
-# Hago el ajuste
+# Defino la fórmula de Paschen:
 def func(x, a_0, a_1, a_2):
-    return a_0*(x)/(np.log(a_1*x) - np.log(a_2))
+    return a_0*(x)/(np.log(a_1*x) + a_2)
 
-formula_de_paschen = 'a_0*(x)/(np.log(a_1*x) + np.log(a_2))'
-# (e *exp(a_2))/a_1 es el minimo que es aprox 0.63
-# cuando tiende a infinito x, crece como a_0*x/a_1
-ajuste = Ajuste(x = pds, y = rupturas, cov_y = np.full(shape = rupturas.shape, fill_value = 1))
-ajuste.fit(formula = formula_de_paschen, p0 = [600, 3, .2])
-a_0, a_1, a_2 = ajuste.parametros
-(np.e*a_2)/a_1
-# Ploteo
-pds_auxiliar = np.linspace(pds[0][0],pds[-1][0],1000)
+formula_de_paschen = f'a_0*(x)/(np.log(a_1*x) + a_2)'
 
-fig, ax = plt.subplots(nrows = 1, ncols = 1)
-ax.scatter(pds, rupturas, color = 'blue', s = 10)
-ax.plot(pds_auxiliar, func(pds_auxiliar, a_0, a_1, a_2))
-ax.set_xlabel('Presión x distancia [mbar x cm]')
-ax.set_ylabel('Tension de ruptura [V]')
-ax.grid(visible = True)
-fig.show()
+# Para chequear en que valores diverge el método
+# for a_1, a_2 in zip(np.linspace(-10,10,100), np.linspace(1,20, 100)):
+#     a_1,a_2
+#     try:
+#         np.asarray_chkfinite(np.log(a_1*pds)-a_2)
+#     except:
+#         raise ValueError(f'{a_1, a_2}')
+# Hago el ajuste
+ajuste = Ajuste(x = pds, y = rupturas, cov_y = np.full(shape = rupturas.shape, fill_value = 10)) # TODO: definir bien el error
+p_a_0, p_a_1, p_a_2 = 699, 0.001, 12
+# p_a_0, p_a_1, p_a_2 = 1,1,1
 
-
-
-# ===================================================
-# ===================================================
+ajuste.fit(
+formula = formula_de_paschen,
+p0 = [p_a_0, p_a_1, p_a_2], 
+bounds = ([500,0.000001,-np.inf],[800,100,np.inf]), 
+# bounds = ([200,0.000001,-np.inf],[np.inf,100,20]), 
+method = 'dogbox'
+)
+ajuste.parametros, np.sqrt(np.diag(ajuste.cov_parametros))
+ajuste.graph(estilo = 'ajuste_2')

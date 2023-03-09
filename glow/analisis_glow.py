@@ -149,19 +149,19 @@ plt.show(block = False)
 plt.savefig(os.path.join(output_path + os.path.normpath('/espectro_aire_he.svg')))
 
 # Helio .16 mbar
-fname = os.path.join(input_path + os.path.normpath(f'/{helio_0_16}'))
-datos_leidos = np.loadtxt(fname = fname, delimiter = ',', skiprows=33)
-frecuencia, intensidad = datos_leidos[:,0], datos_leidos[:,1]
-pks = find_peaks(intensidad, distance=25, height=0.17)[0]
-# plt.figure()
-plt.plot(frecuencia, intensidad, '-', label = 'Helio 0,16 mbar')
-plt.plot(frecuencia[pks], intensidad[pks], 'x')
-plt.xlabel('Longitud de onda [nm]')
-plt.ylabel('Intensidad [u.a.]')
-plt.grid(visible = True)
-plt.legend(loc = 'best')
-plt.show(block = False)
-print(frecuencia[pks])
+# fname = os.path.join(input_path + os.path.normpath(f'/{helio_0_16}'))
+# datos_leidos = np.loadtxt(fname = fname, delimiter = ',', skiprows=33)
+# frecuencia, intensidad = datos_leidos[:,0], datos_leidos[:,1]
+# pks = find_peaks(intensidad, distance=25, height=0.17)[0]
+# # plt.figure()
+# plt.plot(frecuencia, intensidad, '-', label = 'Helio 0,16 mbar')
+# plt.plot(frecuencia[pks], intensidad[pks], 'x')
+# plt.xlabel('Longitud de onda [nm]')
+# plt.ylabel('Intensidad [u.a.]')
+# plt.grid(visible = True)
+# plt.legend(loc = 'best')
+# plt.show(block = False)
+# print(frecuencia[pks])
 # plt.savefig(os.path.join(output_path + os.path.normpath('/espectro__he_16.png')))
 # =========================================
 # =========================================

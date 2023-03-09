@@ -12,88 +12,6 @@ variables = Parser(configuration = 'glow').config()
 input_path = os.path.join(glob_path + os.path.normpath(variables['input']))
 output_path = os.path.join(glob_path + os.path.normpath(variables['output']))
 
-# # # ARREGLANDO TENSION GLOW MEDICIONES AIRE
-# R_0, e_R_0 = 149.2, 0.2  # TODO MEDIR DE NUEVO RESISTENCIAS
-# R_1, e_R_1 = 55325, 6
-# R_2, e_R_2 = 56100000, 458000
-# R_3, e_R_3 = 29.932, 4
-# formula_tension_glow = '-t_r_0 + (t_r_1)*(r3_3/r1_2 + 1)'
-# t_0  = time.time()
-# for i in range(1, 5):
-#     fname = os.path.join(input_path + os.path.normpath(f'/medicion_{i}.pkl'))
-#     datos_i = load_dict(fname = fname)
-#     datos_i['tension_glow'] = -datos_i['tension_r0'] + datos_i['tension_r1']*(R_2/R_1 + 1)
-#     datos_i['error_tension_r0'] = 0.000035*datos_i['tension_r0']+0.000005*10
-#     datos_i['error_tension_r1'] = 0.000040*datos_i['tension_r1']+0.000007*1 
-#     error_glow = []
-#     for j in range(len(datos_i['tension_r0'])):
-#         propagacion = Propagacion_errores(
-#         formula = formula_tension_glow,
-#         variables = [('t_r_0', datos_i['tension_r0'][j]), # tensión r_0
-#                     ('t_r_1', datos_i['tension_r1'][j]), # tensión r_1
-#                     ('r1_2', R_1), # r_1
-#                     ('r3_3', R_2), # r_2
-#                     ],
-#         errores = np.array([
-#             datos_i['error_tension_r0'][j],
-#             datos_i['error_tension_r0'][j],
-#             e_R_1,
-#             e_R_2]).reshape(-1, 1)
-#         )
-#         error_glow.append(propagacion.fit()[1])
-#     datos_i['error_glow'] = np.array(error_glow).reshape(-1,1)
-#     save_dict(fname = fname, dic = datos_i, rewrite = True)
-
-# for i in range(1, 5):
-#     fname = os.path.join(input_path + os.path.normpath(f'/medicion_helio_{i}.pkl'))
-#     datos_i = load_dict(fname = fname)
-#     datos_i['tension_glow'] = -datos_i['tension_r0'] + datos_i['tension_r1']*(R_2/R_1 + 1)
-#     datos_i['error_tension_r0'] = 0.000035*datos_i['tension_r0']+0.000005*10
-#     datos_i['error_tension_r1'] = 0.000040*datos_i['tension_r1']+0.000007*1 
-#     error_glow = []
-#     for j in range(len(datos_i['tension_r0'])):
-#         propagacion = Propagacion_errores(
-#         formula = formula_tension_glow,
-#         variables = [('t_r_0', datos_i['tension_r0'][j]), # tensión r_0
-#                     ('t_r_1', datos_i['tension_r1'][j]), # tensión r_1
-#                     ('r1_2', R_1), # r_1
-#                     ('r3_3', R_2), # r_2
-#                     ],
-#         errores = np.array([
-#             datos_i['error_tension_r0'][j],
-#             datos_i['error_tension_r0'][j],
-#             e_R_1,
-#             e_R_2]).reshape(-1, 1)
-#         )
-#         error_glow.append(propagacion.fit()[1])
-#     datos_i['error_glow'] = np.array(error_glow).reshape(-1,1)
-#     save_dict(fname = fname, dic = datos_i, rewrite = True)
-# for i in range(1, 26):
-#     fname = os.path.join(input_path + os.path.normpath(f'/medicion_paschen_{i}.pkl'))
-#     datos_i = load_dict(fname = fname)
-#     datos_i['tension_glow'] = -datos_i['tension_r0'] + datos_i['tension_r1']*(R_2/R_1 + 1)
-#     datos_i['error_tension_r0'] = 0.000035*datos_i['tension_r0']+0.000005*10
-#     datos_i['error_tension_r1'] = 0.000040*datos_i['tension_r1']+0.000007*1 
-#     error_glow = []
-#     for j in range(len(datos_i['tension_r0'])):
-#         propagacion = Propagacion_errores(
-#         formula = formula_tension_glow,
-#         variables = [('t_r_0', datos_i['tension_r0'][j,0]), # tensión r_0
-#                     ('t_r_1', datos_i['tension_r1'][j,0]), # tensión r_1
-#                     ('r1_2', R_1), # r_1
-#                     ('r3_3', R_2), # r_2
-#                     ],
-#         errores = np.array([
-#             datos_i['error_tension_r0'][j,0],
-#             datos_i['error_tension_r0'][j,0],
-#             e_R_1,
-#             e_R_2]).reshape(-1, 1)
-#         )
-#         error_glow.append(propagacion.fit()[1])
-#     datos_i['error_glow'] = np.array(error_glow).reshape(-1,1)
-#     save_dict(fname = fname, dic = datos_i, rewrite = True)
-
-# print(time.time()-t_0)
 # ====================================================
 # Graficamos todas las mediciones juntas de histéresis
 # ====================================================
@@ -396,3 +314,91 @@ plt.grid(visible = True)
 plt.show(block = False)
 
 ajuste.graph(estilo = 'ajuste_1')
+
+#  ####################################################################################################################################################################
+#  ####################################################################################################################################################################
+#  ####################################################################################################################################################################
+# # ARREGLANDO TENSION GLOW MEDICIONES AIRE Y HE
+# R_0, e_R_0 = 149.2, 0.2  # TODO MEDIR DE NUEVO RESISTENCIAS
+# R_1, e_R_1 = 55325, 6
+# R_2, e_R_2 = 56100000, 458000
+# R_3, e_R_3 = 29.932, 4
+# formula_tension_glow = '-t_r_0 + (t_r_1)*(r3_3/r1_2 + 1)'
+# t_0  = time.time()
+# for i in range(1, 5):
+#     fname = os.path.join(input_path + os.path.normpath(f'/medicion_{i}.pkl'))
+#     datos_i = load_dict(fname = fname)
+#     datos_i['tension_glow'] = -datos_i['tension_r0'] + datos_i['tension_r1']*(R_2/R_1 + 1)
+#     datos_i['error_tension_r0'] = 0.000035*datos_i['tension_r0']+0.000005*10
+#     datos_i['error_tension_r1'] = 0.000040*datos_i['tension_r1']+0.000007*1 
+#     error_glow = []
+#     for j in range(len(datos_i['tension_r0'])):
+#         propagacion = Propagacion_errores(
+#         formula = formula_tension_glow,
+#         variables = [('t_r_0', datos_i['tension_r0'][j]), # tensión r_0
+#                     ('t_r_1', datos_i['tension_r1'][j]), # tensión r_1
+#                     ('r1_2', R_1), # r_1
+#                     ('r3_3', R_2), # r_2
+#                     ],
+#         errores = np.array([
+#             datos_i['error_tension_r0'][j],
+#             datos_i['error_tension_r0'][j],
+#             e_R_1,
+#             e_R_2]).reshape(-1, 1)
+#         )
+#         error_glow.append(propagacion.fit()[1])
+#     datos_i['error_glow'] = np.array(error_glow).reshape(-1,1)
+#     save_dict(fname = fname, dic = datos_i, rewrite = True)
+
+# for i in range(1, 5):
+#     fname = os.path.join(input_path + os.path.normpath(f'/medicion_helio_{i}.pkl'))
+#     datos_i = load_dict(fname = fname)
+#     datos_i['tension_glow'] = -datos_i['tension_r0'] + datos_i['tension_r1']*(R_2/R_1 + 1)
+#     datos_i['error_tension_r0'] = 0.000035*datos_i['tension_r0']+0.000005*10
+#     datos_i['error_tension_r1'] = 0.000040*datos_i['tension_r1']+0.000007*1 
+#     error_glow = []
+#     for j in range(len(datos_i['tension_r0'])):
+#         propagacion = Propagacion_errores(
+#         formula = formula_tension_glow,
+#         variables = [('t_r_0', datos_i['tension_r0'][j]), # tensión r_0
+#                     ('t_r_1', datos_i['tension_r1'][j]), # tensión r_1
+#                     ('r1_2', R_1), # r_1
+#                     ('r3_3', R_2), # r_2
+#                     ],
+#         errores = np.array([
+#             datos_i['error_tension_r0'][j],
+#             datos_i['error_tension_r0'][j],
+#             e_R_1,
+#             e_R_2]).reshape(-1, 1)
+#         )
+#         error_glow.append(propagacion.fit()[1])
+#     datos_i['error_glow'] = np.array(error_glow).reshape(-1,1)
+#     save_dict(fname = fname, dic = datos_i, rewrite = True)
+# for i in range(1, 26):
+#     fname = os.path.join(input_path + os.path.normpath(f'/medicion_paschen_{i}.pkl'))
+#     datos_i = load_dict(fname = fname)
+#     datos_i['tension_glow'] = -datos_i['tension_r0'] + datos_i['tension_r1']*(R_2/R_1 + 1)
+#     datos_i['error_tension_r0'] = 0.000035*datos_i['tension_r0']+0.000005*10
+#     datos_i['error_tension_r1'] = 0.000040*datos_i['tension_r1']+0.000007*1 
+#     error_glow = []
+#     for j in range(len(datos_i['tension_r0'])):
+#         propagacion = Propagacion_errores(
+#         formula = formula_tension_glow,
+#         variables = [('t_r_0', datos_i['tension_r0'][j,0]), # tensión r_0
+#                     ('t_r_1', datos_i['tension_r1'][j,0]), # tensión r_1
+#                     ('r1_2', R_1), # r_1
+#                     ('r3_3', R_2), # r_2
+#                     ],
+#         errores = np.array([
+#             datos_i['error_tension_r0'][j,0],
+#             datos_i['error_tension_r0'][j,0],
+#             e_R_1,
+#             e_R_2]).reshape(-1, 1)
+#         )
+#         error_glow.append(propagacion.fit()[1])
+#     datos_i['error_glow'] = np.array(error_glow).reshape(-1,1)
+#     save_dict(fname = fname, dic = datos_i, rewrite = True)
+# print(time.time()-t_0)
+# ARREGLANDO PASCHEN
+
+    

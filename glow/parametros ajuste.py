@@ -23,9 +23,10 @@ for i in range(1, 26):
 # Transformo a arrays
 rupturas = np.array(rupturas).reshape(-1,1)-3
 pds = np.array(pds).reshape(-1,1)
+
 a_0, a_1, a_2, p_d = symbols("a_0 a_1 a_2 p_d",   real = True)
 expr = a_0*(p_d)/(log(a_1*p_d) + a_2) 
-expr = (p_d/.49)*(a_0 + a_1*.49)/(log(a_2*p_d))
+# expr = (p_d/.49)*(a_0 + a_1*.49)/(log(a_2*p_d))
 
 pds_auxiliar = np.linspace(pds[0], pds[-1],1000)
 
@@ -37,7 +38,9 @@ with plt.style.context('seaborn-whitegrid'):
     ax.scatter(pds, rupturas, label = 'Datos')
     
     # Valores iniciales
-    A_0, A_1, A_2 = 555, .0000482, 11.458
+    # A_0, A_1, A_2 = 555, .0000482, 11.458
+    A_0, A_1, A_2 = 365, 10, 11.458
+    # A_0, A_1, A_2  = 699, 0.001, 12
     # A_0, A_1 = 555, .0000482
  
     # CAmbia de sympy a numpy
@@ -45,8 +48,8 @@ with plt.style.context('seaborn-whitegrid'):
     l, = plt.plot(pds_auxiliar, lam_x(pds_auxiliar, A_0, A_1, A_2), linewidth = 2)
     
     ax.margins(x = 0)
-    ax.set_xlim([0, 1.75])
-    ax.set_ylim([300, 600])
+    # ax.set_xlim([0, 1.75])
+    # ax.set_ylim([300, 600])
     ax.set_xlabel('pd', fontsize = 16)
     ax.set_ylabel('Tensión de ruptura [V]', fontsize = 16) #, rotation = 0)
     
@@ -56,9 +59,9 @@ with plt.style.context('seaborn-whitegrid'):
     ax_2 = plt.axes([0.25, 0.25, 0.65, 0.03], facecolor = axcolor)
 
     # See documentation of Slider to get configurations
-    s_0 = Slider(ax_0, label = 'a_0', valmin = 100, valmax = 2000, valinit = A_0, valstep = 1)
-    s_1 = Slider(ax_1, label = 'a_1', valmin = .0000001, valmax = .01, valinit = A_1, valstep = .0000001)
-    s_2 = Slider(ax_2, label = 'a_2', valmin = 2, valmax = 25, valinit = A_2, valstep = .001)
+    s_0 = Slider(ax_0, label = 'a_0', valmin = 100, valmax = 800, valinit = A_0, valstep = 1)
+    s_1 = Slider(ax_1, label = 'a_1', valmin = .0000001, valmax = .0001, valinit = A_1, valstep = .0000001)
+    s_2 = Slider(ax_2, label = 'a_2', valmin = 2, valmax = 20, valinit = A_2, valstep = .001)
 
     def update(val):
         a_0 = s_0.val

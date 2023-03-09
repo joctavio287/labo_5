@@ -12,6 +12,88 @@ variables = Parser(configuration = 'glow').config()
 input_path = os.path.join(glob_path + os.path.normpath(variables['input']))
 output_path = os.path.join(glob_path + os.path.normpath(variables['output']))
 
+# # # ARREGLANDO TENSION GLOW MEDICIONES AIRE
+# R_0, e_R_0 = 149.2, 0.2  # TODO MEDIR DE NUEVO RESISTENCIAS
+# R_1, e_R_1 = 55325, 6
+# R_2, e_R_2 = 56100000, 458000
+# R_3, e_R_3 = 29.932, 4
+# formula_tension_glow = '-t_r_0 + (t_r_1)*(r3_3/r1_2 + 1)'
+# t_0  = time.time()
+# for i in range(1, 5):
+#     fname = os.path.join(input_path + os.path.normpath(f'/medicion_{i}.pkl'))
+#     datos_i = load_dict(fname = fname)
+#     datos_i['tension_glow'] = -datos_i['tension_r0'] + datos_i['tension_r1']*(R_2/R_1 + 1)
+#     datos_i['error_tension_r0'] = 0.000035*datos_i['tension_r0']+0.000005*10
+#     datos_i['error_tension_r1'] = 0.000040*datos_i['tension_r1']+0.000007*1 
+#     error_glow = []
+#     for j in range(len(datos_i['tension_r0'])):
+#         propagacion = Propagacion_errores(
+#         formula = formula_tension_glow,
+#         variables = [('t_r_0', datos_i['tension_r0'][j]), # tensión r_0
+#                     ('t_r_1', datos_i['tension_r1'][j]), # tensión r_1
+#                     ('r1_2', R_1), # r_1
+#                     ('r3_3', R_2), # r_2
+#                     ],
+#         errores = np.array([
+#             datos_i['error_tension_r0'][j],
+#             datos_i['error_tension_r0'][j],
+#             e_R_1,
+#             e_R_2]).reshape(-1, 1)
+#         )
+#         error_glow.append(propagacion.fit()[1])
+#     datos_i['error_glow'] = np.array(error_glow).reshape(-1,1)
+#     save_dict(fname = fname, dic = datos_i, rewrite = True)
+
+# for i in range(1, 5):
+#     fname = os.path.join(input_path + os.path.normpath(f'/medicion_helio_{i}.pkl'))
+#     datos_i = load_dict(fname = fname)
+#     datos_i['tension_glow'] = -datos_i['tension_r0'] + datos_i['tension_r1']*(R_2/R_1 + 1)
+#     datos_i['error_tension_r0'] = 0.000035*datos_i['tension_r0']+0.000005*10
+#     datos_i['error_tension_r1'] = 0.000040*datos_i['tension_r1']+0.000007*1 
+#     error_glow = []
+#     for j in range(len(datos_i['tension_r0'])):
+#         propagacion = Propagacion_errores(
+#         formula = formula_tension_glow,
+#         variables = [('t_r_0', datos_i['tension_r0'][j]), # tensión r_0
+#                     ('t_r_1', datos_i['tension_r1'][j]), # tensión r_1
+#                     ('r1_2', R_1), # r_1
+#                     ('r3_3', R_2), # r_2
+#                     ],
+#         errores = np.array([
+#             datos_i['error_tension_r0'][j],
+#             datos_i['error_tension_r0'][j],
+#             e_R_1,
+#             e_R_2]).reshape(-1, 1)
+#         )
+#         error_glow.append(propagacion.fit()[1])
+#     datos_i['error_glow'] = np.array(error_glow).reshape(-1,1)
+#     save_dict(fname = fname, dic = datos_i, rewrite = True)
+# for i in range(1, 26):
+#     fname = os.path.join(input_path + os.path.normpath(f'/medicion_paschen_{i}.pkl'))
+#     datos_i = load_dict(fname = fname)
+#     datos_i['tension_glow'] = -datos_i['tension_r0'] + datos_i['tension_r1']*(R_2/R_1 + 1)
+#     datos_i['error_tension_r0'] = 0.000035*datos_i['tension_r0']+0.000005*10
+#     datos_i['error_tension_r1'] = 0.000040*datos_i['tension_r1']+0.000007*1 
+#     error_glow = []
+#     for j in range(len(datos_i['tension_r0'])):
+#         propagacion = Propagacion_errores(
+#         formula = formula_tension_glow,
+#         variables = [('t_r_0', datos_i['tension_r0'][j,0]), # tensión r_0
+#                     ('t_r_1', datos_i['tension_r1'][j,0]), # tensión r_1
+#                     ('r1_2', R_1), # r_1
+#                     ('r3_3', R_2), # r_2
+#                     ],
+#         errores = np.array([
+#             datos_i['error_tension_r0'][j,0],
+#             datos_i['error_tension_r0'][j,0],
+#             e_R_1,
+#             e_R_2]).reshape(-1, 1)
+#         )
+#         error_glow.append(propagacion.fit()[1])
+#     datos_i['error_glow'] = np.array(error_glow).reshape(-1,1)
+#     save_dict(fname = fname, dic = datos_i, rewrite = True)
+
+# print(time.time()-t_0)
 # ====================================================
 # Graficamos todas las mediciones juntas de histéresis
 # ====================================================
@@ -56,7 +138,7 @@ plt.show(block = False)
 # ====================================================
 
 # ================================================
-# Graficamos la tensión de ruptura Paschen ejemplo 
+# Graficamos la tensión de ruptura Paschen ejemplo # TODO HACER IGUAL A ARRIBA PERO CON ZOOM A LA RUPTURA Y MARCAR CON FLECHAS LA  HISTERESIS
 # ================================================
 i = 1
 fname = os.path.join(input_path + os.path.normpath(f'/medicion_paschen_{i}.pkl'))
@@ -96,6 +178,8 @@ plt.show(block = False)
 
 # =========================================
 # Espectrograma de la luz del aire y del He 
+# # TODO ELEGIR UNA DEL HELIO Y USAR SIN ETIQUETAS DE PRESIÓN Y VER DE GRAFICARRLAS JUNTAS
+# # TODO BUSCAR PICOS: CHEQUEAR CORRESPONDENCIA. AIRE: NITROGENO; HE: He.
 # =========================================
 helio_0_64 = 'espectro_helio_0.64mbar.csv'
 helio_0_16 = 'espectro_helio_0.16mbar.csv'
@@ -184,49 +268,50 @@ plt.show(block = False)
 # =======================================================
 # =======================================================
 
-
-# ===================================================
-# Levantamos la curva de Paschen modficaada e intentamos ajustar
-# ===================================================
-
-# Armo dos arrays con los datos de presión por distancia y otro de tensión de ruptura
-rupturas = []
-p = []
-d = []
-for i in range(1, 26):
-    fname = os.path.join(input_path + os.path.normpath(f'/medicion_paschen_{i}.pkl'))
-    datos_i = load_dict(fname = fname)
-    rupturas.append(datos_i['ruptura'])
-    p.append(datos_i['presion'])
-    d.append(datos_i['pd']/(10*datos_i['presion']))
-
-# Transformo a arrays
-rupturas = np.array(rupturas)
-p = np.array(p)
-d = np.array(d)
-X = p,d
-# Propago el error de las rupturas
-
-# Defino la fórmula de Paschen:
-def func(d, a_0, a_1, a_2):
-    p = .49 *0.750062 # Torr
-    return (a_0*p+a_1*d)/(np.log(a_1*p*d))
-curve_fit(func, xdata = (p,d), ydata = rupturas, absolute_sigma = np.full(shape = rupturas.shape, fill_value = 10))
-formula_de_paschen = f'(a_0*(x)/(np.log(a_1*x) + a_2)'
-plt.figure()
-plt.scatter(pds, rupturas)
-
-
 # ===================================================
 # Levantamos la curva de Paschen e intentamos ajustar
 # ===================================================
-
 # Armo dos arrays con los datos de presión por distancia y otro de tensión de ruptura
 rupturas = []
 pds = []
-for i in range(1, 26):
-    fname = os.path.join(input_path + os.path.normpath(f'/medicion_paschen_{i}.pkl'))
+errores_rupturas = []
+R_0, e_R_0 = 149.2, 0.2  # TODO MEDIR DE NUEVO RESISTENCIAS
+R_1, e_R_1 = 55325, 6
+R_2, e_R_2 = 56100000, 458000
+R_3, e_R_3 = 29.932, 4
+formula_tension_glow = '-t_r_0 + (t_r_1)*(r3_3/r1_2 + 1)'
+for i in range(1, 5):
+    # fname = os.path.join(input_path + os.path.normpath(f'/medicion_paschen_{i}.pkl'))
+    fname = os.path.join(input_path + os.path.normpath(f'/medicion_{i}.pkl'))
     datos_i = load_dict(fname = fname)
+    for j in range(len(datos_i['tension_r0'])):
+        # propagacion = Propagacion_errores(
+        # formula = formula_tension_glow,
+        # variables = [('t_r_0', datos_i['tension_r0'][j,0]), # tensión r_0
+        #             ('t_r_1', datos_i['tension_r1'][j,0]), # tensión r_1
+        #             ('r1_2', R_1), # r_1
+        #             ('r3_3', R_2), # r_2
+        #             ],
+        # errores = np.array([
+        #     datos_i['error_tension_r0'][j,0],
+        #     datos_i['error_tension_r0'][j,0],
+        #     e_R_1,
+        #     e_R_2]).reshape(-1, 1)
+        # )
+        propagacion = Propagacion_errores(
+        formula = formula_tension_glow,
+        variables = [('t_r_0', datos_i['tension_r0'][j]), # tensión r_0
+                    ('t_r_1', datos_i['tension_r1'][j]), # tensión r_1
+                    ('r1_2', R_1), # r_1
+                    ('r3_3', R_2), # r_2
+                    ],
+        errores = np.array([
+            datos_i['error_tension_r0'][j],
+            datos_i['error_tension_r0'][j],
+            e_R_1,
+            e_R_2]).reshape(-1, 1)
+        )
+        datos_i['error_glow'] = propagacion.fit()[1]
     rupturas.append(datos_i['ruptura'])
     pds.append(datos_i['pd']/10)
 
@@ -234,7 +319,17 @@ for i in range(1, 26):
 rupturas = np.array(rupturas).reshape(-1,1)
 pds = np.array(pds).reshape(-1,1)
 
-# Propago el error de las rupturas
+# Propago el error de las rupturas y de pds # TODO
+R_0, e_R_0 = 149.2, 0.2  # TODO MEDIR DE NUEVO RESISTENCIAS
+R_1, e_R_1 = 55325, 6
+R_2, e_R_2 = 56100000, 458000
+R_3, e_R_3 = 29.932, 4
+tension_R_0, e_tension_R_0 = datos_i['tension_r0'], 0.000035*datos_i['tension_r0']+0.000005*10
+tension_R_1, e_tension_R_1 = datos_i['tension_r1'], 0.000040*datos_i['tension_r1']+0.000007*1
+
+
+
+
 
 # Defino la fórmula de Paschen:
 def func(x, a_0, a_1, a_2):
@@ -251,15 +346,53 @@ formula_de_paschen = f'a_0*(x)/(np.log(a_1*x) + a_2)'
 #         raise ValueError(f'{a_1, a_2}')
 # Hago el ajuste
 ajuste = Ajuste(x = pds, y = rupturas, cov_y = np.full(shape = rupturas.shape, fill_value = 10)) # TODO: definir bien el error
-p_a_0, p_a_1, p_a_2 = 699, 0.001, 12
+# p_a_0, p_a_1, p_a_2 = 699, 0.001, 12
+p_a_0, p_a_1, p_a_2=555, .0000482, 11.458
 # p_a_0, p_a_1, p_a_2 = 1,1,1
 
 ajuste.fit(
 formula = formula_de_paschen,
 p0 = [p_a_0, p_a_1, p_a_2], 
-bounds = ([500,0.000001,-np.inf],[800,100,np.inf]), 
+# bounds = ([500,0.000001,0],[800,.0000484,np.inf]), 
+bounds = ([554,.0000482,0],[800,.0000484,np.inf]), 
+
 # bounds = ([200,0.000001,-np.inf],[np.inf,100,20]), 
 method = 'dogbox'
 )
 ajuste.parametros, np.sqrt(np.diag(ajuste.cov_parametros))
-ajuste.graph(estilo = 'ajuste_2')
+
+# ajuste = Ajuste(x = pds_teo, y = tension_teo, cov_y = np.full(shape = tension_teo.shape, fill_value = 10)) # TODO: definir bien el error
+# # p_a_0, p_a_1, p_a_2 = 699, 0.001, 12
+# p_a_0, p_a_1, p_a_2=555, .0000482, 11.458
+# # p_a_0, p_a_1, p_a_2 = 1,1,1
+
+# ajuste.fit(
+# formula = formula_de_paschen,
+# p0 = [p_a_0, p_a_1, p_a_2], 
+# # bounds = ([500,0.000001,0],[800,.0000484,np.inf]), 
+# # bounds = ([554,.0000482,0],[800,.0000484,np.inf]), 
+# bounds = ([0,0.000001,-20],[np.inf, 1,20]), 
+# # method = 'dogbox'
+# )
+# ajuste.parametros, np.sqrt(np.diag(ajuste.cov_parametros))
+# ajuste.graph(estilo = 'ajuste_2')
+
+
+pds_auxiliar = np.linspace(pds[0], pds[-1],1000)
+
+plt.figure()    
+# plt.scatter(pds, rupturas, label = 'Datos')
+# plt.plot(pds_auxiliar, func(pds_auxiliar,*ajuste.parametros), linewidth = 2)
+
+
+# plt.xlim([0, 1.75])
+# plt.ylim([300, 1000])
+plt.xlabel('pd', fontsize = 16)
+plt.ylabel('Tensión de ruptura [V]', fontsize = 16) #, rotation = 0)
+
+# plt.xscale('log')
+# plt.yscale('log')
+plt.grid(visible = True)
+plt.show(block = False)
+
+ajuste.graph(estilo = 'ajuste_1')

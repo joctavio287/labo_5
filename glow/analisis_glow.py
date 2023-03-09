@@ -5,6 +5,7 @@ from labos.propagacion import Propagacion_errores
 from sympy import symbols, lambdify, latex, log
 from matplotlib.widgets import Slider, Button
 from scipy.optimize import curve_fit
+from scipy.signal import find_peaks
 
 # Importo los paths
 glob_path = os.path.normpath(os.getcwd())
@@ -103,43 +104,63 @@ helio_0_64 = 'espectro_helio_0.64mbar.csv'
 helio_0_16 = 'espectro_helio_0.16mbar.csv'
 aire = 'espectro_aire.csv'
 
+espectro_aire_teorico = [337.1, 357.7, 380.5, 391.4, 399.5, 405.9, 427.8] 
+#The removal of impurities from gray cotton fabric by atmospheric pressure plasma treatment and its characterization using ATR-FTIR spectroscopy (Hemen Dave, Lalita Ledwani, Nisha Chandwani, Narendrasinh Chauhan and S.K. Nema
+fig, axs = plt.subplots(2, sharex=True, figsize=(7,10))
 # Aire 1.6 mbar
 fname = os.path.join(input_path + os.path.normpath(f'/{aire}'))
 datos_leidos = np.loadtxt(fname = fname, delimiter = ';', skiprows=33)
-frecuencia, intensidad = datos_leidos[:,0].reshape(-1,1), datos_leidos[:,1].reshape(-1,1)
-plt.figure()
-plt.plot(frecuencia, intensidad, '-', label = 'Aire 1,6 mbar')
-plt.xlabel('Tiempo [s]')
-plt.ylabel('Tension [V]')
-plt.grid(visible = True)
-plt.legend(loc = 'best')
-plt.show(block = False)
+frecuencia, intensidad = datos_leidos[:,0], datos_leidos[:,1]
+pks = find_peaks(intensidad, distance=25, height=0.0731)[0][:8]
+# plt.figure()
+axs[0].set_title('Espectrometría del aire', fontsize=20)
+axs[0].plot(frecuencia, intensidad, 'r', label = 'Intensidad de longitud de onda')
+axs[0].errorbar(frecuencia[pks], intensidad[pks], xerr=2, fmt='ko', capsize=5, label='Picos de intensidad')
+axs[0].vlines(espectro_aire_teorico, min(intensidad), max(intensidad), linestyles='dashed', colors='green', label='Longitudes de onda de referencia', zorder=0)
+# axs[0].set_xlabel('Longitud de onda [nm]')
+# axs[0].set_ylabel('Intensidad [u.a.]')
+axs[0].grid(visible = True)
+axs[0].legend(loc = 'best')
+# plt.show(block = False)
+# print(frecuencia[pks])
 # plt.savefig(os.path.join(output_path + os.path.normpath('/espectro_aire.png')))
+
+espectro_he_teorico = [393.5912, 447.148, 471.314, 492.193, 501.567, 587.562, 667.815, 706.5190, 728.1349]
+#https://physics.nist.gov/cgi-bin/ASD/lines1.pl?spectra=He&limits_type=0&low_w=200&upp_w=1000&unit=1&submit=Retrieve+Data&de=0&I_scale_type=1&format=0&line_out=0&en_unit=0&output=0&bibrefs=1&page_size=15&show_obs_wl=1&order_out=0&max_low_enrg=&show_av=2&max_upp_enrg=&tsb_value=0&min_str=&A_out=0&intens_out=on&max_str=&allowed_out=1&forbid_out=1&min_accur=&min_intens=&conf_out=on&term_out=on&enrg_out=on&J_out=on
 
 # Helio .64 mbar
 fname = os.path.join(input_path + os.path.normpath(f'/{helio_0_64}'))
 datos_leidos = np.loadtxt(fname = fname, delimiter = ',', skiprows=33)
-frecuencia, intensidad = datos_leidos[:,0].reshape(-1,1), datos_leidos[:,1].reshape(-1,1)
-plt.figure()
-plt.plot(frecuencia, intensidad, '-', label = 'Helio 0,64 mbar')
-plt.xlabel('Tiempo [s]')
-plt.ylabel('Tension [V]')
-plt.grid(visible = True)
-plt.legend(loc = 'best')
+frecuencia, intensidad = datos_leidos[:,0], datos_leidos[:,1]
+pks = find_peaks(intensidad, distance=25, height=0.10)[0][[0, 2, 3, 4, 5, 6, 8, 9, 10]]
+# plt.figure()
+axs[1].set_title('Espectrometría del helio', fontsize=20)
+axs[1].plot(frecuencia, intensidad, 'r', label = 'Helio')
+axs[1].vlines(espectro_he_teorico, min(intensidad), max(intensidad), linestyles='dashed', colors='green', label='Longitudes de onda teóricas (helio)', zorder=0)
+axs[1].errorbar(frecuencia[pks], intensidad[pks], xerr=2, fmt='ko', capsize=5, label='Picos de intensidad (helio)')
+axs[1].set_xlabel('Longitud de onda [nm]', fontsize=15)
+fig.supylabel('Intensidad [u.a.]', fontsize=15)
+axs[1].set_xlim(330, 735)
+axs[1].grid(visible = True)
+# axs[1].legend(loc = 'best')
 plt.show(block = False)
-# plt.savefig(os.path.join(output_path + os.path.normpath('/espectro_he_64.png')))
+# print(frecuencia[pks])
+plt.savefig(os.path.join(output_path + os.path.normpath('/espectro_aire_he.svg')))
 
 # Helio .16 mbar
 fname = os.path.join(input_path + os.path.normpath(f'/{helio_0_16}'))
 datos_leidos = np.loadtxt(fname = fname, delimiter = ',', skiprows=33)
-frecuencia, intensidad = datos_leidos[:,0].reshape(-1,1), datos_leidos[:,1].reshape(-1,1)
-plt.figure()
+frecuencia, intensidad = datos_leidos[:,0], datos_leidos[:,1]
+pks = find_peaks(intensidad, distance=25, height=0.17)[0]
+# plt.figure()
 plt.plot(frecuencia, intensidad, '-', label = 'Helio 0,16 mbar')
-plt.xlabel('Tiempo [s]')
-plt.ylabel('Tension [V]')
+plt.plot(frecuencia[pks], intensidad[pks], 'x')
+plt.xlabel('Longitud de onda [nm]')
+plt.ylabel('Intensidad [u.a.]')
 plt.grid(visible = True)
 plt.legend(loc = 'best')
 plt.show(block = False)
+print(frecuencia[pks])
 # plt.savefig(os.path.join(output_path + os.path.normpath('/espectro__he_16.png')))
 # =========================================
 # =========================================

@@ -113,7 +113,7 @@ datos_leidos = np.loadtxt(fname = fname, delimiter = ';', skiprows=33)
 frecuencia, intensidad = datos_leidos[:,0], datos_leidos[:,1]
 pks = find_peaks(intensidad, distance=25, height=0.0731)[0][:8]
 # plt.figure()
-axs[0].set_title('Espectrometría del aire', fontsize=20)
+# axs[0].set_title('Espectrometría del aire', fontsize=20)
 axs[0].plot(frecuencia, intensidad, 'b', label = 'Aire')
 axs[0].errorbar(frecuencia[pks], intensidad[pks], xerr=2, fmt='ko', capsize=5)
 axs[0].vlines(espectro_aire_teorico, min(intensidad), max(intensidad), linestyles='dashed', colors='green', zorder=0)
@@ -133,7 +133,7 @@ datos_leidos = np.loadtxt(fname = fname, delimiter = ',', skiprows=33)
 frecuencia, intensidad = datos_leidos[:,0], datos_leidos[:,1]
 pks = find_peaks(intensidad, distance=25, height=0.10)[0][[0, 2, 3, 4, 5, 6, 8, 9, 10]]
 # plt.figure()
-axs[1].set_title('Espectrometría del helio', fontsize=20)
+# axs[1].set_title('Espectrometría del helio', fontsize=20)
 axs[1].plot(frecuencia, intensidad, 'r', label = 'Helio')
 axs[1].vlines(espectro_he_teorico, min(intensidad), max(intensidad), linestyles='dashed', colors='green', label='Longitudes de onda de referencia', zorder=0)
 axs[1].errorbar(frecuencia[pks], intensidad[pks], xerr=2, fmt='ko', capsize=5, label='Picos de intensidad')

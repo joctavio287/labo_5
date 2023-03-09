@@ -399,6 +399,11 @@ ajuste.graph(estilo = 'ajuste_1')
 #     datos_i['error_glow'] = np.array(error_glow).reshape(-1,1)
 #     save_dict(fname = fname, dic = datos_i, rewrite = True)
 # print(time.time()-t_0)
-# ARREGLANDO PASCHEN
-
+# # ARREGLANDO PASCHEN
+# for i in range(1, 26):
+#     fname = os.path.join(input_path + os.path.normpath(f'/medicion_paschen_{i}.pkl'))
+#     datos_i = load_dict(fname = fname)
+#     datos_i['ruptura'] = datos_i['tension_glow'].max()
+#     datos_i['error_ruptura'] = datos_i['error_glow'][datos_i['tension_glow'].argmax()]
+#     save_dict(fname = fname, dic = datos_i, rewrite = True)
     

@@ -189,131 +189,109 @@ plt.show(block = False)
 # ===================================================
 # Levantamos la curva de Paschen e intentamos ajustar
 # ===================================================
+
+# Defino la fórmula de Paschen y su derivada:
+def func(x, a_0, a_1, a_2):
+    return a_0*(x)/(np.log(a_1*x) + a_2)
+formula_de_paschen = f'a_0*(x)/(np.log(a_1*x) + a_2)'
+def dfunc(x, a_0, a_1, a_2):
+    return(a_0*(np.log(a_1*x)+a_2-1))/(np.log(a_1*x)+a_2)**2
+
 # Armo dos arrays con los datos de presión por distancia y otro de tensión de ruptura
 rupturas = []
-pds = []
 errores_rupturas = []
-R_0, e_R_0 = 149.2, 0.2  # TODO MEDIR DE NUEVO RESISTENCIAS
-R_1, e_R_1 = 55325, 6
-R_2, e_R_2 = 56100000, 458000
-R_3, e_R_3 = 29.932, 4
-formula_tension_glow = '-t_r_0 + (t_r_1)*(r3_3/r1_2 + 1)'
-for i in range(1, 5):
-    # fname = os.path.join(input_path + os.path.normpath(f'/medicion_paschen_{i}.pkl'))
-    fname = os.path.join(input_path + os.path.normpath(f'/medicion_{i}.pkl'))
-    datos_i = load_dict(fname = fname)
-    for j in range(len(datos_i['tension_r0'])):
-        # propagacion = Propagacion_errores(
-        # formula = formula_tension_glow,
-        # variables = [('t_r_0', datos_i['tension_r0'][j,0]), # tensión r_0
-        #             ('t_r_1', datos_i['tension_r1'][j,0]), # tensión r_1
-        #             ('r1_2', R_1), # r_1
-        #             ('r3_3', R_2), # r_2
-        #             ],
-        # errores = np.array([
-        #     datos_i['error_tension_r0'][j,0],
-        #     datos_i['error_tension_r0'][j,0],
-        #     e_R_1,
-        #     e_R_2]).reshape(-1, 1)
-        # )
-        propagacion = Propagacion_errores(
-        formula = formula_tension_glow,
-        variables = [('t_r_0', datos_i['tension_r0'][j]), # tensión r_0
-                    ('t_r_1', datos_i['tension_r1'][j]), # tensión r_1
-                    ('r1_2', R_1), # r_1
-                    ('r3_3', R_2), # r_2
-                    ],
-        errores = np.array([
-            datos_i['error_tension_r0'][j],
-            datos_i['error_tension_r0'][j],
-            e_R_1,
-            e_R_2]).reshape(-1, 1)
-        )
-        datos_i['error_glow'] = propagacion.fit()[1]
-    rupturas.append(datos_i['ruptura'])
-    pds.append(datos_i['pd']/10)
+pds = []
+errores_pds = []
+for i in range(1, 26):
+    fname = os.path.join(input_path + os.path.normpath(f'/n_medicion_paschen_{i}.pkl'))
+    datos = load_dict(fname = fname)
+
+    # Datos ruptura [V]
+    rupturas.append(datos['ruptura'])
+  
+    # Datos pxd [cm x mbar]
+    propaga_pd = Propagacion_errores(
+    formula = 'p_0*d_1', 
+    variables = [('p_0', datos['presion']),
+                 ('d_1', datos['distancia'])],
+    errores = np.array([.02,#datos['error_presion'],
+                        datos['error_distancia']]).reshape(-1,1)
+    )
+    pd, e_pd = propaga_pd.fit()
+    print(pd/10, e_pd/10)
+
+    # En centímetros
+    pds.append(pd/10)
+    errores_pds.append(e_pd/10)
+
+    # Agrego al error de la ruptura el error del eje
+    errores_rupturas.append(datos['error_ruptura'])
 
 # Transformo a arrays
 rupturas = np.array(rupturas).reshape(-1,1)
+errores_rupturas = np.array(errores_rupturas).reshape(-1,1)
 pds = np.array(pds).reshape(-1,1)
+errores_pds = np.array(errores_pds).reshape(-1,1)
 
-# Propago el error de las rupturas y de pds # TODO
-R_0, e_R_0 = 149.2, 0.2  # TODO MEDIR DE NUEVO RESISTENCIAS
-R_1, e_R_1 = 55325, 6
-R_2, e_R_2 = 56100000, 458000
-R_3, e_R_3 = 29.932, 4
-tension_R_0, e_tension_R_0 = datos_i['tension_r0'], 0.000035*datos_i['tension_r0']+0.000005*10
-tension_R_1, e_tension_R_1 = datos_i['tension_r1'], 0.000040*datos_i['tension_r1']+0.000007*1
+# Corto los datos
+d = 5
+rupturas  = rupturas[d:]
+errores_rupturas = errores_rupturas[d:]
+pds = pds[d:]
+errores_pds  = errores_pds[d:]
 
-
-
-
-
-# Defino la fórmula de Paschen:
-def func(x, a_0, a_1, a_2):
-    return a_0*(x)/(np.log(a_1*x) + a_2)
-
-formula_de_paschen = f'a_0*(x)/(np.log(a_1*x) + a_2)'
-
-# Para chequear en que valores diverge el método
-# for a_1, a_2 in zip(np.linspace(-10,10,100), np.linspace(1,20, 100)):
-#     a_1,a_2
-#     try:
-#         np.asarray_chkfinite(np.log(a_1*pds)-a_2)
-#     except:
-#         raise ValueError(f'{a_1, a_2}')
 # Hago el ajuste
-ajuste = Ajuste(x = pds, y = rupturas, cov_y = np.full(shape = rupturas.shape, fill_value = 10)) # TODO: definir bien el error
 # p_a_0, p_a_1, p_a_2 = 699, 0.001, 12
-p_a_0, p_a_1, p_a_2=555, .0000482, 11.458
+p_a_0, p_a_1, p_a_2 = 500, .0000482, 11.458
 # p_a_0, p_a_1, p_a_2 = 1,1,1
-
+ajuste = Ajuste(x = pds, y = rupturas, cov_y = errores_rupturas) # TODO: definir bien el error
 ajuste.fit(
 formula = formula_de_paschen,
 p0 = [p_a_0, p_a_1, p_a_2], 
-# bounds = ([500,0.000001,0],[800,.0000484,np.inf]), 
-bounds = ([554,.0000482,0],[800,.0000484,np.inf]), 
-
-# bounds = ([200,0.000001,-np.inf],[np.inf,100,20]), 
+bounds = ([500,0.000001,0],[800,.0000484,np.inf]), 
 method = 'dogbox'
 )
+# Chequeo los parámetros y la bondad
 ajuste.parametros, np.sqrt(np.diag(ajuste.cov_parametros))
+ajuste.bondad()
 
-# ajuste = Ajuste(x = pds_teo, y = tension_teo, cov_y = np.full(shape = tension_teo.shape, fill_value = 10)) # TODO: definir bien el error
-# # p_a_0, p_a_1, p_a_2 = 699, 0.001, 12
-# p_a_0, p_a_1, p_a_2=555, .0000482, 11.458
-# # p_a_0, p_a_1, p_a_2 = 1,1,1
-
-# ajuste.fit(
-# formula = formula_de_paschen,
-# p0 = [p_a_0, p_a_1, p_a_2], 
-# # bounds = ([500,0.000001,0],[800,.0000484,np.inf]), 
-# # bounds = ([554,.0000482,0],[800,.0000484,np.inf]), 
-# bounds = ([0,0.000001,-20],[np.inf, 1,20]), 
-# # method = 'dogbox'
-# )
-# ajuste.parametros, np.sqrt(np.diag(ajuste.cov_parametros))
-# ajuste.graph(estilo = 'ajuste_2')
-
-
+# Tomo una tira auxiliar para graficar el ajuste y hago las bandas de error del mismo
 pds_auxiliar = np.linspace(pds[0], pds[-1],1000)
+franja_error = Propagacion_errores(
+        variables = [('a_0', ajuste.parametros[0]), ('a_1', ajuste.parametros[1]), ('a_2', ajuste.parametros[1])], 
+        errores = ajuste.cov_parametros, 
+        formula = formula_de_paschen, 
+        dominio = pds_auxiliar
+        ).fit()[1]
 
-plt.figure()    
-# plt.scatter(pds, rupturas, label = 'Datos')
-# plt.plot(pds_auxiliar, func(pds_auxiliar,*ajuste.parametros), linewidth = 2)
-
-
-# plt.xlim([0, 1.75])
-# plt.ylim([300, 1000])
-plt.xlabel('pd', fontsize = 16)
-plt.ylabel('Tensión de ruptura [V]', fontsize = 16) #, rotation = 0)
-
-# plt.xscale('log')
-# plt.yscale('log')
+plt.figure()
+plt.scatter(x = pds, y = rupturas, s = 5, color = 'black', label = 'Datos')
+plt.errorbar(
+    pds.reshape(-1), 
+    rupturas.reshape(-1), 
+    yerr = errores_rupturas.reshape(-1), 
+    xerr = errores_pds.reshape(-1),
+    marker = '.', 
+    fmt = 'None', 
+    capsize = 1.5, 
+    color = 'black', 
+    label = 'Error de los datos')
+plt.plot(pds_auxiliar, func(pds_auxiliar, *ajuste.parametros), 'r-', label = 'Ajuste', alpha = .5)
+plt.plot(pds_auxiliar, func(pds_auxiliar, *ajuste.parametros) + franja_error, '--', color = 'green', label = 'Error del ajuste')
+plt.plot(pds_auxiliar, func(pds_auxiliar, *ajuste.parametros) - franja_error, '--', color = 'green')
+plt.fill_between(
+    pds_auxiliar.reshape(-1), 
+    func(pds_auxiliar, *ajuste.parametros).reshape(-1) - franja_error.reshape(-1),
+    func(pds_auxiliar, *ajuste.parametros).reshape(-1) + franja_error.reshape(-1),
+    facecolor = "gray", 
+    alpha = 0.3)
+plt.xlabel(xlabel = 'Presión x Distancia [cm x mbar]')
+plt.ylabel(ylabel = 'Tensión de ruptura [V]')
+plt.ylim([250, 600])
 plt.grid(visible = True)
-plt.show(block = False)
-
-ajuste.graph(estilo = 'ajuste_1')
+plt.legend()
+plt.tight_layout()
+plt.show(block = False)       
 
 #  ####################################################################################################################################################################
 #  ####################################################################################################################################################################

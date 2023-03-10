@@ -89,3 +89,6 @@ with plt.style.context('seaborn-whitegrid'):
     # radio.on_clicked(colorfunc)
     # plt.tight_layout()
     plt.show(block = False)
+    
+    # TODO: PROBAR HACER AJUSTE ASI:
+    # a_0*x/(log(x/x_min) +1 )

@@ -338,9 +338,12 @@ plt.show(block = False)
 
 #  ####################################################################################################################################################################
 # Javi
-def inverse_paschen(x, a_0, a_1):
-    return -x*np.real(lambertw(-a_0*np.exp(-a_1)/x, -1))/a_0
+# def inverse_paschen(x, a_0, a_1): 
+#     return -x*np.real(lambertw(-a_0*np.exp(-a_1)/x, -1))/a_0
 
+def inverse_paschen(x, a_0, a_1): #con minimo
+    return [-i*np.real(lambertw(-a_0*a_1/(i*np.e), k=0))/a_0 if -a_0*a_1/(i*np.e)>-1/np.e else -i*np.real(lambertw(-a_0*a_1/(i*np.e), k=-1))/a_0 for i in x]
+    # return [lambertw(-a_0*a_1/(i*np.e), k=0) if -a_0*a_1/(i*np.e)>-1/np.e else lambertw(-a_0*a_1/(i*np.e), k=-1) for i in x]
 # Armo dos arrays con los datos de presión por distancia y otro de tensión de ruptura
 rupturas = []
 errores_rupturas = []
@@ -378,13 +381,13 @@ pds = np.array(pds)
 errores_pds = np.array(errores_pds)
 
 # Corto los datos
-d = -9
-rupturas  = rupturas[d:]
-errores_rupturas = errores_rupturas[d:]
-pds = pds[d:]
-errores_pds  = errores_pds[d:]
+# d = 8
+# rupturas  = rupturas[d:]
+# errores_rupturas = errores_rupturas[d:]
+# pds = pds[d:]
+# errores_pds  = errores_pds[d:]
 
-p0 = [500, np.log(.0000482)+ 11.458]
+p0 = [555, 0.63]
 bounds = [(0, np.inf), (0, np.inf)]
 popt, pcov = curve_fit(inverse_paschen, rupturas, pds, sigma=errores_pds, absolute_sigma=True, bounds=bounds, p0=p0)
 
@@ -419,50 +422,50 @@ plt.legend()
 plt.tight_layout()
 plt.show(block = False)    
 
-# with plt.style.context('seaborn-whitegrid'):
-#     fig, ax = plt.subplots(figsize = (12, 6))
-#     plt.subplots_adjust(bottom = .25)
+with plt.style.context('seaborn-whitegrid'):
+    fig, ax = plt.subplots(figsize = (12, 6))
+    plt.subplots_adjust(bottom = .25)
     
-#     # plt.figure()
-#     ax.scatter(rupturas, pds, label = 'Datos')
+    # plt.figure()
+    ax.scatter(rupturas, pds, label = 'Datos')
     
-#     # Valores iniciales
-#     # A_0, A_1, A_2 = 555, .0000482, 11.458
-#     A_0, A_1 = 365, .0000482
-#     # A_0, A_1, A_2  = 699, 0.001, 12
-#     # A_0, A_1 = 555, .0000482
+    # Valores iniciales
+    # A_0, A_1, A_2 = 555, .0000482, 11.458
+    A_0, A_1 = 365, .0000482
+    # A_0, A_1, A_2  = 699, 0.001, 12
+    # A_0, A_1 = 555, .0000482
  
-#     # CAmbia de sympy a numpy
-#     l, = plt.plot(rupturas_aux, inverse_paschen(rupturas_aux, A_0, A_1), linewidth = 2)
+    # CAmbia de sympy a numpy
+    l, = plt.plot(rupturas_aux, inverse_paschen(rupturas_aux, A_0, A_1), linewidth = 2)
     
-#     ax.margins(x = 0)
-#     ax.set_ylabel('pd', fontsize = 16)
-#     ax.set_xlabel('Tensión de ruptura [V]', fontsize = 16) #, rotation = 0)
+    ax.margins(x = 0)
+    ax.set_ylabel('pd', fontsize = 16)
+    ax.set_xlabel('Tensión de ruptura [V]', fontsize = 16) #, rotation = 0)
     
-#     axcolor = 'lightgoldenrodyellow'
-#     ax_0 = plt.axes([0.25, 0.1, 0.65, 0.03], facecolor = axcolor) # left, bottom, width, height
-#     ax_1 = plt.axes([0.25, 0.15, 0.65, 0.03], facecolor = axcolor)
+    axcolor = 'lightgoldenrodyellow'
+    ax_0 = plt.axes([0.25, 0.1, 0.65, 0.03], facecolor = axcolor) # left, bottom, width, height
+    ax_1 = plt.axes([0.25, 0.15, 0.65, 0.03], facecolor = axcolor)
 
-#     # See documentation of Slider to get configurations
-#     s_0 = Slider(ax_0, label = 'a_0', valmin = 0, valmax = 100, valinit = A_0, valstep = 1)
-#     s_1 = Slider(ax_1, label = 'a_1', valmin = 0, valmax = 1, valinit = A_1, valstep = 0.01)
+    # See documentation of Slider to get configurations
+    s_0 = Slider(ax_0, label = 'a_0', valmin = 500, valmax = 100, valinit = A_0, valstep = 1)
+    s_1 = Slider(ax_1, label = 'a_1', valmin = 0, valmax = 1, valinit = A_1, valstep = 0.01)
     
-#     def update(val):
-#         a_0 = s_0.val
-#         a_1 = s_1.val
-#         l.set_ydata(inverse_paschen(rupturas_aux, a_0, a_1))
-#         fig.canvas.draw_idle()
-#     s_0.on_changed(update)
-#     s_1.on_changed(update)
+    def update(val):
+        a_0 = s_0.val
+        a_1 = s_1.val
+        l.set_ydata(inverse_paschen(rupturas_aux, a_0, a_1))
+        fig.canvas.draw_idle()
+    s_0.on_changed(update)
+    s_1.on_changed(update)
 
-#     resetax = plt.axes([0.8, 0.025, 0.1, 0.04])
-#     button = Button(resetax, 'Reset', color=axcolor, hovercolor='0.975')
+    resetax = plt.axes([0.8, 0.025, 0.1, 0.04])
+    button = Button(resetax, 'Reset', color=axcolor, hovercolor='0.975')
 
-#     def reset(event):
-#         s_0.reset()
-#         s_1.reset()
-#     button.on_clicked(reset)
-#     plt.show(block = False)
+    def reset(event):
+        s_0.reset()
+        s_1.reset()
+    button.on_clicked(reset)
+    plt.show(block = False)
 
 
 

@@ -339,7 +339,7 @@ plt.show(block = False)
 #  ####################################################################################################################################################################
 # Javi
 def inverse_paschen(x, a_0, a_1):
-    return -x*np.real(lambertw(-a_0*np.exp(-a_1)/x))/a_0
+    return -x*np.real(lambertw(-a_0*np.exp(-a_1)/x, -1))/a_0
 
 # Armo dos arrays con los datos de presión por distancia y otro de tensión de ruptura
 rupturas = []
@@ -358,7 +358,7 @@ for i in range(1, 26):
     formula = 'p_0*d_1', 
     variables = [('p_0', datos['presion']),
                  ('d_1', datos['distancia'])],
-    errores = np.array([datos['error_presion']*0.15,#datos['error_presion'],
+    errores = np.array([datos['error_presion'], #datos['error_presion'],
                         datos['error_distancia']]).reshape(-1,1)
     )
     pd, e_pd = propaga_pd.fit()
@@ -378,7 +378,7 @@ pds = np.array(pds)
 errores_pds = np.array(errores_pds)
 
 # Corto los datos
-d = 8
+d = -9
 rupturas  = rupturas[d:]
 errores_rupturas = errores_rupturas[d:]
 pds = pds[d:]

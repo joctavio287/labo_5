@@ -56,6 +56,7 @@ for c, i in zip(colors_rgb, np.arange(1, num + 1 , 1)): # for i in range(1, num 
     # capsize = 1, 
     color = c)
 plt.grid(visible = True)
+plt.xscale('log')
 plt.xlabel('Intensidad de corriente [mA]')
 plt.ylabel('Tension [V]')
 plt.legend(loc = 'best')

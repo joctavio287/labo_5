@@ -4,3 +4,6 @@ herramientas/__pycache__/__init__.cpython-39.pyc
 herramientas/__pycache__/__init__.cpython-310.pyc
 herramientas/config/__pycache__/config_builder.cpython-310.pyc
 herramientas/config/__pycache__/config_builder.cpython-311.pyc
+labos/__pycache__/__init__.cpython-311.pyc
+labos/__pycache__/ajuste.cpython-311.pyc
+labos/__pycache__/propagacion.cpython-311.pyc

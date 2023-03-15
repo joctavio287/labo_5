@@ -1,58 +1,10 @@
-import time, numpy as np, pickle, os
-from matplotlib import pyplot as plt
+import os, matplotlib.pyplot as plt, numpy as np, pandas as pd
+from matplotlib import rcParams as rc
 from scipy.signal import find_peaks
-from labos.notificacion_bot import mensaje_tel
+from scipy.signal import savgol_filter
 from labos.ajuste import Ajuste
-def guardar_csv(*data, filename, root='.\\', delimiter=',', header='', rewrite=False):
-    '''
-    Para guardar un archivo en csv
-    '''
-    isfile = os.path.isfile(root+filename+'.csv')
-    if not rewrite and isfile:
-        print('Este archivo ya existe, para sobreescribirlo usar el argumento rewrite')
-        return
-    try:
-        np.savetxt(root+filename+'.csv', np.transpose(np.array([*data])), header=header, delimiter=delimiter)
-        if isfile:
-            print('ATENCIÓN: SE SOBREESCRIBIÓ EL ARCHIVO')
-    except:
-        print('Algo falló cuando se guardaba')
-    return
-
-def save_dict(fname:str, dic:dict, rewrite: bool = False):
-    '''
-    Para salvar un diccionario en formato pickle. 
-    '''
-    isfile = os.path.isfile(fname)
-    if isfile:
-        if not rewrite:
-            print('Este archivo ya existe, para sobreescribirlo usar el argumento rewrite = True.')
-            return
-    try:
-        with open(file = fname, mode = "wb") as archive:
-            pickle.dump(file = archive, obj=dic)
-        texto = f'Se guardo en: {fname}.'
-        if isfile:
-            texto += f'Atención: se reescribió el archivo {fname}'
-    except:
-        print('Algo fallo cuando se guardaba')
-    return
-
-def load_dict(fname:str):
-    '''
-    Para cargar un diccionario en formato pickle. 
-    '''
-    isfile = os.path.isfile(fname)
-    if not isfile:
-        print(f'El archivo {fname} no existe')
-        return
-    try:
-        with open(file = fname, mode = "rb") as archive:
-            data = pickle.load(file = archive)
-        return data
-    except:
-        print('Algo fallo')
-    return
+from labos.propagacion import Propagacion_errores
+from herramientas.config.config_builder import Parser, save_dict, load_dict
 
 def definir_tension(freq:float):
  
@@ -89,7 +41,7 @@ def definir_frecuencia(tension:float):
 
     '''
     return (tension - 1.6922156274324787)/.35639131796658835
-glob_path = 'C:/GRUPO 8/datos'
+
 #%%
 # ====================
 # Distribución Poisson

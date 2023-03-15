@@ -57,10 +57,11 @@ umbral = -0.00422
 
 fig, axs = plt.subplots(2, 1, sharex=True)
 
-axs[0].plot(medicion['tension']*1e3, medicion['tiempo']*1e6, linewidth=0.7)
+axs[0].plot(medicion['tension']*1e3, medicion['tiempo']*1e6, linewidth=0.7, label='Señal osciloscopio')
 ylim = axs[0].get_ylim()
-axs[0].vlines(umbral*1e3, -1, 1, linestyles='dashed', colors='black')
+axs[0].vlines(umbral*1e3, -1, 1, linestyles='dashed', colors='black', label='Umbral')
 axs[0].set_ylim(ylim)
+axs[0].legend(loc='upper left')
 axs[0].set_ylabel('Tiempo [$\mu$s]')
 axs[0].grid(visible = True, alpha=0.3)
 
@@ -81,7 +82,6 @@ axs[1].legend(loc='upper left')
 axs[1].set_xlabel('Tensión [mV]')
 axs[1].set_ylabel('Número de eventos')
 axs[1].grid(visible = True, alpha=0.3)
-axs[1].set_yscale('log')
-axs[1].set_ylim(0, ylim[-1])
+axs[1].set_ylim(ylim)
 plt.savefig('./output/conteo/ruido-umbral-ej.png', dpi=400)
 plt.show()

@@ -28,23 +28,24 @@ colors = cmap(cmap_values)
 colors_rgb = ['#{0:02x}{1:02x}{2:02x}'.format(int(255*a), int(255*b), int(255*c)) for a, b, c, _ in colors]
 
 plt.figure()
-dic = {1:4,2:4,3:4, 4:4}
+dic = {1:(10,7),2:(19,9),3:(16,15), 4:(26,7)}
+# {1:(10,7),2:(19,9),3:(16,15), 4:(26,7)}
 for c, i in zip(colors_rgb, np.arange(1, num + 1 , 1)): # for i in range(1, num + 1):
     fname = os.path.join(input_path + os.path.normpath(f'/medicion_{i}.pkl'))
     datos_leidos = load_dict(fname = fname)
     pr = '(' + str(datos_leidos['presion']).replace('.',',') + r' $\pm$' +' 0,02)'
     corriente = 1000*datos_leidos['corriente_t']
-    plt.plot(corriente, datos_leidos['tension_glow'], '-.', color = c, label = f'{pr} mbar')
-    ini_flechas_x = [corriente[len(corriente)//dic[i]],corriente[len(corriente)*2//3]]
-    ini_flechas_y = [datos_leidos['tension_glow'][len(datos_leidos['tension_glow'])//dic[i]],datos_leidos['tension_glow'][len(datos_leidos['tension_glow'])*2//3]]
-    fin_flechas_x = [corriente[len(corriente)//dic[i] + 3],corriente[len(corriente)*2//3+3]]
-    fin_flechas_y = [datos_leidos['tension_glow'][len(datos_leidos['tension_glow'])//dic[i]+3],datos_leidos['tension_glow'][len(datos_leidos['tension_glow'])*2//3+3]]
+    plt.plot(corriente, datos_leidos['tension_glow'],'.-', markersize = 1, color = c, label = f'{pr} mbar')
+    ini_flechas_x = [corriente[dic[i][0]],corriente[len(corriente)-dic[i][1]]]
+    ini_flechas_y = [datos_leidos['tension_glow'][dic[i][0]],datos_leidos['tension_glow'][len(datos_leidos['tension_glow'])-dic[i][1]]]
+    fin_flechas_x = [corriente[dic[i][0] + 1],corriente[len(corriente)-dic[i][1] + 1]]
+    fin_flechas_y = [datos_leidos['tension_glow'][dic[i][0] + 1],datos_leidos['tension_glow'][len(datos_leidos['tension_glow'])-dic[i][1] + 1]]
     for X_f, Y_f, X_i, Y_i in zip(fin_flechas_x, fin_flechas_y, ini_flechas_x, ini_flechas_y):
         plt.annotate(text = "",
         xy = (X_f,Y_f), 
         xytext = (X_i,Y_i),
-        arrowprops = dict(arrowstyle = "->"),#, color = c),
-        size = 25
+        arrowprops = dict(arrowstyle = "->"), color = c,
+        size = 15
         )
     plt.errorbar(
     corriente, 
@@ -56,13 +57,13 @@ for c, i in zip(colors_rgb, np.arange(1, num + 1 , 1)): # for i in range(1, num 
     # capsize = 1, 
     color = c)
 plt.grid(visible = True)
-# plt.xscale('log')
+plt.xscale('log')
 plt.xlabel('Intensidad de corriente [mA]')
 plt.ylabel('Tension [V]')
 plt.legend(loc = 'best')
 plt.tight_layout()
 plt.show(block = False)
-# plt.savefig(fname = os.path.join(output_path + os.path.normpath('/informe/mediciones_VI_aire.svg')))
+plt.savefig(fname = os.path.join(output_path + os.path.normpath('/informe/mediciones_VI_aire.svg')))
 
 # ====================================================
 # ====================================================
@@ -190,24 +191,24 @@ colors = cmap(cmap_values)
 colors_rgb = ['#{0:02x}{1:02x}{2:02x}'.format(int(255*a), int(255*b), int(255*c)) for a, b, c, _ in colors]
 
 plt.figure()
-dic = {1:4,2:3,3:3, 4:3}
+dic = {1:(24,12),2:(55,12),3:(66,16), 4:(53,12)}
 for c, i in zip(colors_rgb, np.arange(1, num + 1 , 1)): # for i in range(1, num + 1):
     fname = os.path.join(input_path + os.path.normpath(f'/medicion_helio_{i}.pkl'))
     datos_leidos = load_dict(fname = fname)
     datos_leidos['unidades']
     pr = '(' + str(datos_leidos['presion']).replace('.',',') + r' $\pm$' +' 0,02)'
     corriente = 1000*datos_leidos['corriente_t']
-    plt.plot(corriente, datos_leidos['tension_glow'], '-.',label = f'{pr} mbar', color = c)
-    ini_flechas_x = [corriente[len(corriente)//dic[i]],corriente[len(corriente)*2//3]]
-    ini_flechas_y = [datos_leidos['tension_glow'][len(datos_leidos['tension_glow'])//dic[i]],datos_leidos['tension_glow'][len(datos_leidos['tension_glow'])*2//3]]
-    fin_flechas_x = [corriente[len(corriente)//dic[i] + 3],corriente[len(corriente)*2//3+3]]
-    fin_flechas_y = [datos_leidos['tension_glow'][len(datos_leidos['tension_glow'])//dic[i]+3],datos_leidos['tension_glow'][len(datos_leidos['tension_glow'])*2//3+3]]
+    plt.plot(corriente, datos_leidos['tension_glow'], '.-', markersize = 1, label = f'{pr} mbar', color = c)
+    ini_flechas_x = [corriente[dic[i][0]],corriente[len(corriente)-dic[i][1]]]
+    ini_flechas_y = [datos_leidos['tension_glow'][dic[i][0]],datos_leidos['tension_glow'][len(datos_leidos['tension_glow'])-dic[i][1]]]
+    fin_flechas_x = [corriente[dic[i][0] + 1],corriente[len(corriente)-dic[i][1] + 1]]
+    fin_flechas_y = [datos_leidos['tension_glow'][dic[i][0] + 1],datos_leidos['tension_glow'][len(datos_leidos['tension_glow'])-dic[i][1] + 1]]
     for X_f, Y_f, X_i, Y_i in zip(fin_flechas_x, fin_flechas_y, ini_flechas_x, ini_flechas_y):
         plt.annotate(text = "",
         xy = (X_f,Y_f), 
         xytext = (X_i,Y_i),
         arrowprops = dict(arrowstyle = "->"),#, color = c),
-        size = 25
+        size = 12
         )
     plt.errorbar(
     corriente, 
@@ -220,7 +221,7 @@ for c, i in zip(colors_rgb, np.arange(1, num + 1 , 1)): # for i in range(1, num 
     color = c)
 plt.grid(visible = True)
 plt.xlabel('Intensidad de corriente [mA]')
-
+plt.xscale('log')
 plt.ylabel('Tension [V]')
 plt.legend(loc = 'best')
 plt.tight_layout()
@@ -249,7 +250,7 @@ errores_pds = []
 for i in range(1, 26):
     fname = os.path.join(input_path + os.path.normpath(f'/n_medicion_paschen_{i}.pkl'))
     datos = load_dict(fname = fname)
-
+    datos['pd']/.49
     # Datos ruptura [V]
     rupturas.append(datos['ruptura'])
   

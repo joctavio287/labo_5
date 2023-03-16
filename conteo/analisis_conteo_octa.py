@@ -94,20 +94,22 @@ for f in os.listdir(os.path.join(input_path + carpeta)):
 tensiones_ruido, cuentas_ruido = np.unique(tensiones_ruido, return_counts = True)
 
 # Graficamos definiendo un umbral
-umbral = 3.2 #tensiones_ruido.mean() - 3*np.std(tensiones_ruido)
+umbral1 = 1 
+umbral2 = 3.1
 plt.figure()
 
-plt.vlines(x = -umbral, ymin = 0, ymax =100000, label = f'Umbral:{-umbral}', color = 'C2', linestyles='dashed')
+plt.vlines(x = -umbral1, ymin = 0, ymax =100000, label = f'Umbral 1:{-umbral1} V', color = 'C2', linestyles='dashed')
+plt.vlines(x = -umbral2, ymin = 0, ymax =100000, label = f'Umbral 2:{-umbral2} V', color = 'C2', linestyles='dashed')
 plt.bar(tensiones,
         cuentas,
         color = 'C1', 
-        width=.15,
+        width= .05,
         alpha = .75,
         label = 'Laser incidiendo sobre FM')
 plt.bar(tensiones_ruido,
         cuentas_ruido,
         color = 'C0', 
-        width= .15,
+        width= .05,
         alpha = 1,
         label = 'Ruido')
 # plt.ylim(0,cuentas_ruido.max())
@@ -142,7 +144,7 @@ error_suma_apariciones = np.sqrt(np.sum(apariciones))
 frecuencia = apariciones/np.sum(apariciones)
 error_frecuencia = np.sqrt((np.sqrt(apariciones)/np.sum(apariciones))**2 + 
         (apariciones*error_suma_apariciones/(np.sum(apariciones)**2))**2
-        )
+        ) 
 
 # Valor medio y error
 media = np.array([cuenta*frec for cuenta, frec in zip(cuentas, frecuencia)]).sum()
@@ -163,9 +165,9 @@ plt.errorbar(cuentas, frecuencia, yerr = error_frecuencia, fmt = 'o', capsize = 
 # Ajuste
 plt.plot(cuentas, formula_poisson(media, cuentas), color = 'C2')
 plt.errorbar(cuentas, formula_poisson(media, cuentas), yerr = franja_error, marker = 'o', capsize = 1.5, color = 'C2', label = 'Ajuste')
-
+plt.xticks(cuentas)
 plt.xlabel('Número de fotones')
-plt.ylabel('Ocurrencia')
+plt.ylabel('Probabilidad')
 plt.grid(visible = True, alpha=0.3)
 plt.legend()
 plt.show(block = False)
@@ -191,26 +193,32 @@ tensiones_ruido = []
 carpeta = '/bose(50ns)/ruido_2v/'
 for f in os.listdir(os.path.join(input_path + carpeta)):
     medicion = load_dict(fname = os.path.join(input_path + carpeta + f))
+    medicion['unidades'] = 'Reescribimos el umbral en 0.' +medicion['unidades']
+    medicion['indice_picos'] = find_peaks(-medicion['tension'], height = 0)[0]#, distance = 50)[0]
+    medicion['indice_picos'] = medicion['indice_picos'][medicion['tension'][medicion['indice_picos']]<0]
+    medicion['tiempo_picos'] = medicion['tiempo'][medicion['indice_picos']]
+    medicion['tension_picos'] = medicion['tension'][medicion['indice_picos']]
+    # save_dict(os.path.join(input_path + carpeta + f), medicion, rewrite = True)
     for t in medicion['tension_picos']:
         tensiones_ruido.append(t)
 tensiones_ruido, cuentas_ruido = np.unique(tensiones_ruido, return_counts = True)
 
 
 # Graficamos definiendo un umbral
-umbral = 0.2 #tensiones_ruido.mean() - 3*np.std(tensiones_ruido)
+umbral = 0.003 #tensiones_ruido.mean() - 3*np.std(tensiones_ruido)
 
 plt.figure()
-plt.vlines(x = -umbral, ymin = 0, ymax =100000, label = f'Umbral:{-umbral}', color = 'C2', linestyles='dashed')
+plt.vlines(x = -umbral, ymin = 0, ymax =1000, label = f'Umbral:{-umbral} V', color = 'C2', linestyles='dashed')
 plt.bar(tensiones,
         cuentas,
         color = 'C1', 
-        width=.15,
-        alpha = .75,
+        width =.00015,
+        alpha = 1,
         label = 'Laser incidiendo sobre FM')
 plt.bar(tensiones_ruido,
         cuentas_ruido,
         color = 'C0', 
-        width= .15,
+        width =.00015,
         alpha = 1,
         label = 'Ruido')
 # plt.ylim(0,cuentas_ruido.max())
@@ -266,6 +274,7 @@ plt.errorbar(cuentas, frecuencia, yerr = error_frecuencia, fmt = 'o', capsize = 
 plt.plot(cuentas, formula_bose(media, cuentas), color = 'C2')
 plt.errorbar(cuentas, formula_bose(media, cuentas), yerr = franja_error, marker = 'o', capsize = 1.5, color = 'C2', label = 'Ajuste')
 
+plt.xticks(cuentas[:,5])
 plt.xlabel('Número de fotones')
 plt.ylabel('Ocurrencia')
 plt.grid(visible = True, alpha=0.3)
@@ -306,9 +315,3 @@ plt.xlabel(r'$\Delta \tau$ [s]')
 plt.grid(visible = True)
 plt.legend()
 plt.show(block = False)
-
-
-
-
-
-

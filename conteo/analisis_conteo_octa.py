@@ -98,8 +98,8 @@ umbral1 = 1
 umbral2 = 3.1
 plt.figure()
 
-plt.vlines(x = -umbral1, ymin = 0, ymax =100000, color = 'C2', linestyles='dashed')
-plt.vlines(x = -umbral2, ymin = 0, ymax =100000, color = 'C2', linestyles='dashed')
+# plt.vlines(x = -umbral1, ymin = 0, ymax =100000, color = 'C2', label = 'Umbral', linestyles='dashed')
+plt.vlines(x = -umbral2, ymin = 0, ymax =100000, color = 'C2', label = 'Umbral', linestyles='dashed')
 plt.bar(tensiones,
         cuentas,
         color = 'C1', 
@@ -118,9 +118,14 @@ plt.ylabel('Número de eventos')
 plt.grid(visible = True, alpha=0.3)
 plt.yscale('log')
 plt.legend()
-plt.show(block = False)
+# plt.show(block = False)
+# plt.savefig(os.path.join(output_path + os.path.normpath('/presentacion/umbral_chico.png')))
+# plt.savefig(os.path.join(output_path + os.path.normpath('/presentacion/umbral_grande.png')))
 
 # Levantamos la estadística habiendo fijado el umbral
+# umbral = umbral1
+umbral = umbral2
+
 carpeta = '/poisson(10ms)/laser_2v_bis_2/'
 ocurrencias = []
 for f in os.listdir(os.path.join(input_path + carpeta)):
@@ -171,6 +176,9 @@ plt.ylabel('Probabilidad')
 plt.grid(visible = True, alpha=0.3)
 plt.legend()
 plt.show(block = False)
+# plt.savefig(os.path.join(output_path + os.path.normpath('/presentacion/distribucion_poisson_umbral_chico.png')))
+# plt.savefig(os.path.join(output_path + os.path.normpath('/presentacion/distribucion_poisson_umbral_grande.png')))
+
 
 # ==================
 # Distribución Bose
@@ -268,7 +276,7 @@ plt.bar(cuentas,
         color = 'C0', 
         width = .5,
         alpha = 1)
-plt.errorbar(cuentas, frecuencia, yerr = error_frecuencia, fmt = 'o', capsize = 1.5, color = 'C1', label = 'Experimental')
+plt.errorbar(cuentas, frecuencia, yerr = error_frecuencia + frecuencia*0.01, fmt = 'o', capsize = 1.5, color = 'C1', label = 'Experimental')
 
 # Ajuste
 plt.plot(cuentas, formula_bose(media, cuentas), color = 'C2')
@@ -276,10 +284,11 @@ plt.errorbar(cuentas, formula_bose(media, cuentas), yerr = franja_error, marker 
 
 plt.xticks(cuentas[:,5])
 plt.xlabel('Número de fotones')
-plt.ylabel('Ocurrencia')
+plt.ylabel('Probabilidad')
 plt.grid(visible = True, alpha=0.3)
 plt.legend()
 plt.show(block = False)
+# plt.savefig(os.path.join(output_path + os.path.normpath('/presentacion/distribucion_bose.png')))
 
 # ====================
 # Tiempo de coherencia

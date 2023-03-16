@@ -1,5 +1,4 @@
-import os, matplotlib.pyplot as plt, numpy as np, pandas as pd
-from matplotlib import rcParams as rc
+import os, matplotlib.pyplot as plt, numpy as np
 from scipy.signal import find_peaks
 from scipy.signal import savgol_filter
 from labos.ajuste import Ajuste
@@ -60,15 +59,15 @@ def definir_frecuencia(tension:float):
 # Determinamos el umbral
 
 # Definición del umbral
-paso = 2*.005*10/256 # medicion['unidades'].split('CH1: ')[1].split(';')[0]
+paso = 2*.5*10/256 # medicion['unidades'].split('CH1: ')[1].split(';')[0]
 maximo_altura = .02
 bins = np.arange(-maximo_altura, 0, paso)
 
 # Laser
 tensiones = []
-# carpeta = '/poisson(10ms)/laser_2v_bis/'
-carpeta = '/viejo/laser_prendido_4/'
-
+carpeta = '/poisson(10ms)/laser_2v/'
+# carpeta = '/viejo/laser_prendido_4/'
+dic = {}
 for f in os.listdir(os.path.join(input_path + carpeta)):
     medicion = load_dict(fname = os.path.join(input_path + carpeta + f))
     # medicion['unidades'] = 'Reescribimos el umbral en 0.' +medicion['unidades']
@@ -79,7 +78,12 @@ for f in os.listdir(os.path.join(input_path + carpeta)):
     
     # save_dict(os.path.join(input_path + carpeta + f), medicion, rewrite = True)
     tensiones.append(medicion['tension_picos'].reshape(-1,1))
-    # tensiones.append(medicion['tension'].reshape(-1,1))
+    # tensiones_1, cuentas = np.unique(medicion['tension_picos'], return_counts = True)
+    # for te, cuen in zip(tensiones_1, cuentas):
+    #     try:
+    #         dic[te] = cuen
+    #     except:
+    #         dic[te] += cuen
 
 tensiones = np.concatenate(tensiones, axis = 0)
 
@@ -98,12 +102,16 @@ plt.figure()
 #           histtype = "step", 
 #           color = "green")
 # plt.vlines(umbral, 0, 80000, color = 'red', label = f'umbral: {umbral}')
-
+# cuentas, frec 
+# plt.bar(dic.keys(),
+#         dic.values(),
+#         color = 'C0', 
+#         width=.015)
 plt.hist(tensiones,
           bins = bins,
           label = "Laser prendido",
           histtype = "step", 
-          color = "blue")
+          color = "C1")
 plt.legend()
 plt.xlabel('Tensión [V]')
 plt.ylabel('Número de eventos')

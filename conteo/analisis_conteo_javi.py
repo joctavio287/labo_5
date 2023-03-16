@@ -74,11 +74,12 @@ plt.show()
 ## P0, P1, P2
 ########################################
 
+########################################
+#BOSE
+########################################
 path_bose = 'input\\conteo\\bose(50ns)\\laser_2v' #Ventana de 500 ns
-path_poisson = 'input\\conteo\\poisson(10ms)\\laser_2v'
 
 umbral_bose = 0.003
-
 P0_bose_total = np.zeros(2500)
 P1_bose_total = np.zeros(2500)
 P2_bose_total = np.zeros(2500)
@@ -142,5 +143,69 @@ axs[2].plot(vent, Pn_teo_poisson(vent, 2, n_mean, T))
 axs[2].set_ylabel('$P_2$')
 axs[2].grid()
 axs[2].set_xlabel('Tamaño de ventana temporal [ns]')
+
+plt.show()
+
+########################################
+#POISSON
+########################################
+
+path_poisson = 'input\\conteo\\poisson(10ms)\\laser_2v'
+
+umbral_poisson = 0.003
+P0_poisson_total = np.zeros(2500)
+P1_poisson_total = np.zeros(2500)
+P2_poisson_total = np.zeros(2500)
+for filename in os.listdir(path_poisson):
+  data = load_dict(path_poisson + '\\' + filename)
+  P0_poisson = np.zeros(2500)
+  P1_poisson = np.zeros(2500)
+  P2_poisson = np.zeros(2500)
+  for i in range(2500):
+    if i == 0:
+      indice_picos = find_peaks(-data['tension'], height = umbral_poisson)[0]#, distance = 50)[0]
+      tiempo_picos = data['tiempo'][indice_picos]
+      tension_picos = data['tension'][indice_picos]
+    else:
+      indice_picos = find_peaks(-data['tension'][:-i], height = umbral_poisson)[0]#, distance = 50)[0]
+      tiempo_picos = data['tiempo'][:-i][indice_picos]
+      tension_picos = data['tension'][:-i][indice_picos]
+  
+    ocurrencia = len(tension_picos[tension_picos<-umbral_poisson])
+    if ocurrencia == 0:
+      P0_poisson[i] += 1
+    elif ocurrencia == 1:
+      P1_poisson[i] += 1 
+    elif ocurrencia == 2:
+      P2_poisson[i] += 1
+  P0_poisson_total += P0_poisson
+  P1_poisson_total += P1_poisson
+  P2_poisson_total += P2_poisson 
+
+
+n_mean = 1 #A CHEQUEAR
+T = 100 #ms
+
+fig, axs = plt.subplots(3, sharex=True)
+vent = np.linspace(T, 0, 2500) #ms
+axs[0].plot(vent, P0_poisson_total/np.max(P0_poisson_total), 'o',label='Datos', markevery=70)
+axs[0].plot(vent, Pn_teo_bose(vent, 0, n_mean, T), label='Bose Einstein')
+axs[0].plot(vent, Pn_teo_poisson(vent, 0, n_mean, T), label='Poisson')
+axs[0].set_ylabel('$P_0$')
+axs[0].grid()
+axs[0].legend()
+
+axs[1].plot(vent, P1_poisson_total/np.max(P1_poisson_total), 'o', markevery=70)
+axs[1].plot(vent, Pn_teo_bose(vent, 1, n_mean, T))
+axs[1].plot(vent, Pn_teo_poisson(vent, 1, n_mean, T))
+axs[1].set_ylabel('$P_1$')
+axs[1].grid()
+
+axs[2].plot(vent, P2_poisson_total/np.max(P2_poisson_total), 'o', markevery=70)
+axs[2].plot(vent, Pn_teo_bose(vent, 2, n_mean, T))
+axs[2].plot(vent, Pn_teo_poisson(vent, 2, n_mean, T))
+axs[2].set_ylabel('$P_2$')
+axs[2].grid()
+axs[2].set_xlabel('Tamaño de ventana temporal [ms]')
 
 plt.show()

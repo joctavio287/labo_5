@@ -12,6 +12,10 @@ variables = Parser(configuration = 'conteo').config()
 input_path = os.path.join(glob_path + os.path.normpath(variables['input']))
 output_path = os.path.join(glob_path + os.path.normpath(variables['output']))
 
+def find_nearest_arg(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return idx
 
 def definir_tension(freq:float):
  
@@ -266,8 +270,6 @@ for f in os.listdir(os.path.join(input_path + carpeta)):
     tensiones_ruido.append(medicion['tension_picos'].reshape(-1,1))
 tensiones_ruido = np.concatenate(tensiones_ruido, axis = 0)
 
-
-
 plt.figure()
 plt.hist(tensiones_ruido,
           bins = bins,
@@ -307,75 +309,79 @@ for f in os.listdir(os.path.join(input_path + carpeta)):
     ocurrencias.append(ocurrencia)
 
 # Ajuste
-cuentas, frecuencia = np.unique(ocurrencias, return_counts = True)
-error_frecuencia = np.sqrt(frecuencia) + frecuencia*.001
+cuentas, apariciones = np.unique(ocurrencias, return_counts = True)
+error_suma_apariciones = np.sqrt(np.sum(apariciones))
+frecuencia = apariciones/np.sum(apariciones)
+error_frecuencia = np.sqrt((np.sqrt(apariciones)/np.sum(apariciones))**2 + 
+        (apariciones*error_suma_apariciones/(np.sum(apariciones)**2))**2
+        )
 
-formula_bose = 
-ajuste = Ajuste(
-    x = cuentas.reshape(-1,1),
-    y = frecuencia.reshape(-1,1), 
-    cov_y = error_frecuencia.reshape(-1,1)
-)
+# Valor medio y error
+media = np.array([cuenta*frec for cuenta, frec in zip(cuentas, frecuencia)]).sum()
+media_std = np.sqrt(np.sum([(cuenta*e_frec)**2 for cuenta, e_frec in zip(cuentas, error_frecuencia)]))
 
-ajuste.fit(formula)
+formula_bose = 'a_0**x/((1+a_0)**(1+x))'
+def formula_bose_f(a_0, x):
+    return a_0**x/((1+a_0)**(1+x))
+
+franja_error = Propagacion_errores(
+        variables = [('a_0', media)], 
+        errores = np.array([media_std]).reshape(-1,1), 
+        formula = formula_bose, 
+        dominio = cuentas
+        ).fit()[1]
+
+
 plt.figure()
-# plt.stairs(cuentas, bordes, fill=True)
-# plt.vlines(bordes, 0, cuentas.max(), colors='w')
-plt.errorbar(cuentas, frecuencia, yerr = error_frecuencia, marker = '.', fmt = 'None', capsize = 1.5, color = 'black')
+
+plt.plot(cuentas, formula_bose_f(media, cuentas), color = 'C0')
+plt.errorbar(cuentas, frecuencia, yerr = error_frecuencia, fmt = 'o', capsize = 1.5, color = 'C1', label = 'Experimental')
+# plt.scatter(cuentas, frecuencia, marker = '.', fmt = 'None', capsize = 1.5, color = 'black', label = 'Experimental')
 plt.bar(cuentas, frecuencia, color = 'C2')
+
+plt.errorbar(cuentas, formula_bose_f(media, cuentas), yerr = franja_error, marker = 'o', capsize = 1.5, color = 'C0', label = 'Ajuste')
+# plt.plot(cuentas, formula_bose_f(media, cuentas), 'r.-', label = 'Ajuste', alpha = .5)
+# plt.plot(cuentas, formula_bose_f(media, cuentas) + franja_error, '--', color = 'green', label = 'Error del ajuste')
+# plt.plot(cuentas, formula_bose_f(media, cuentas) - franja_error, '--', color = 'green')
+# plt.fill_between(cuentas, formula_bose_f(media, cuentas) - franja_error, formula_bose_f(media, cuentas) + franja_error, facecolor = "gray", alpha = 0.3)
+
 plt.xlabel('Número de fotones')
 plt.ylabel('Ocurrencia')
 plt.grid(visible = True, alpha=0.3)
+plt.legend()
 plt.show(block = False)
-
-
-# %%
 
 # Tiempo de coherencia
-
-carpeta = '/poisson(10ms)/laser_2v/'
-
-mediciones = []
-for f in os.listdir('C:/GRUPO 8/correlacion_frecuencia/correlacion_20e-1v_0_ohms'):
-    medicion = load_dict(fname = os.path.join('C:/GRUPO 8/correlacion_frecuencia/correlacion_20e-1v_0_ohms'+ f))
-    
-
-
-# Levantamos la curva promediando
-correlacion_promedio = np.mean([load_dict(f'C:/GRUPO 8/correlacion_frecuencia/{carpeta}/{i}')['correlacion'] for i in os.listdir(f'C:/GRUPO 8/correlacion_frecuencia/{carpeta}')], axis = 0)
-diferencia_temporal = load_dict(fname)['diferencia_temporal']
-eje_temporal = np.arange(-1250*diferencia_temporal, 1250*diferencia_temporal, diferencia_temporal)
+color = {20:'C0',35:'C1',60:'C2'}
 plt.figure()   
-plt.plot(eje_temporal, correlacion_promedio)
+for l in [20,35,60]:
+    carpeta = f'/correlacion_frecuencia/correlacion_{l}e-1v_0_ohms/'
+    correlaciones = []
+    normalizaciones = []
+    for f in os.listdir(os.path.join(input_path + carpeta)):
+        medicion = load_dict(fname = os.path.join(input_path + carpeta + f))
+        tension = -medicion['tension'] + (medicion['tension']).max()
+        correlacion = np.correlate(tension, tension, mode ='same')
+        normalizaciones.append(np.correlate(tension, tension))
+        correlaciones.append(correlacion.reshape(-1,1))
+
+    normalizacion = np.mean(normalizaciones)
+    correlacion_promedio = np.mean(np.array(correlaciones), axis =0)/normalizacion
+    diferencia_temporal = medicion['diferencia_temporal']
+
+    eje_temporal = np.arange(-1250*diferencia_temporal, 1250*diferencia_temporal, diferencia_temporal)
+
+    t_c = np.round(np.abs(1000*eje_temporal[find_nearest_arg(correlacion_promedio, 0.5)]),5)
+
+    plt.plot(eje_temporal, correlacion_promedio, color = color[l])
+    plt.hlines(y = .5, xmin = 0, xmax = t_c/1000, color = color[l], linestyles = 'dashdot',
+                label = f'Frecuencia = {np.round(definir_frecuencia(l/10),2)} Hz y ' +r'$\tau_c$' + f' = {t_c} ms')
+    plt.xlim(0,0.005)
+plt.ylabel('Correlación')
+plt.xlabel(r'$\Delta \tau$ [s]')
 plt.grid(visible = True)
+plt.legend()
 plt.show(block = False)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

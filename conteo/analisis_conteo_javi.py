@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 from scipy.signal import find_peaks
+from labos.propagacion import Propagacion_errores
 
 # Importo los paths
 glob_path = os.path.normpath(os.getcwd())
@@ -83,11 +84,13 @@ umbral_bose = 0.003
 P0_bose_total = np.zeros(2500)
 P1_bose_total = np.zeros(2500)
 P2_bose_total = np.zeros(2500)
-for filename in os.listdir(path_bose):
+ocurrencias = np.zeros((2500, 1000))
+for j, filename in enumerate(os.listdir(path_bose)):
   data = load_dict(path_bose + '\\' + filename)
   P0_bose = np.zeros(2500)
   P1_bose = np.zeros(2500)
   P2_bose = np.zeros(2500)
+  ocurrencia_tau = np.zeros(2500)
   for i in range(2500):
     if i == 0:
       indice_picos = find_peaks(-data['tension'], height = umbral_bose)[0]#, distance = 50)[0]
@@ -99,52 +102,139 @@ for filename in os.listdir(path_bose):
       tension_picos = data['tension'][:-i][indice_picos]
   
     ocurrencia = len(tension_picos[tension_picos<-umbral_bose])
+    ocurrencia_tau[i] = ocurrencia
     if ocurrencia == 0:
       P0_bose[i] += 1
     elif ocurrencia == 1:
       P1_bose[i] += 1 
     elif ocurrencia == 2:
       P2_bose[i] += 1
+
+  ocurrencias[:,j] = ocurrencia_tau
+  
   P0_bose_total += P0_bose
   P1_bose_total += P1_bose
   P2_bose_total += P2_bose 
 
+error_frecuencia0 = np.zeros(2500)
+error_frecuencia1 = np.zeros(2500)
+error_frecuencia2 = np.zeros(2500)
+for i in range(2500):
+  cuentas, apariciones = np.unique(ocurrencias[i,:], return_counts=True)
+  error_suma_apariciones = np.sqrt(np.sum(apariciones))
+  frecuencia = apariciones/np.sum(apariciones)
+  try:
+    error_frecuencia0[i], error_frecuencia1[i], error_frecuencia2[i], *_ = np.sqrt((np.sqrt(apariciones)/np.sum(apariciones))**2 + 
+          (apariciones*error_suma_apariciones/(np.sum(apariciones)**2))**2)
+  except:
+    try:
+      error_frecuencia0[i], error_frecuencia1[i], *_ = np.sqrt((np.sqrt(apariciones)/np.sum(apariciones))**2 + 
+        (apariciones*error_suma_apariciones/(np.sum(apariciones)**2))**2)
+    except:
+      error_frecuencia0[i], *_ = np.sqrt((np.sqrt(apariciones)/np.sum(apariciones))**2 + 
+      (apariciones*error_suma_apariciones/(np.sum(apariciones)**2))**2)
+
+P0_bose_total = P0_bose_total/1000
+P1_bose_total = P1_bose_total/1000
+P2_bose_total = P2_bose_total/1000
 # ocurrencias_total = np.concatenate(ocurrencias_total, axis=1)
 # ocurrencias_total = np.concatenate([np.array(i).reshape(-1, 1) for i in ocurrencias_total], axis=1)
 # occ = np.sum(ocurrencias_total, axis=1)
 
 def Pn_teo_bose(t, n, nT, T):
-  return (nT/T*t)**n/(1 + nT/T * t)**(n+1)
+  return (nT/T*t)**n / (1 + nT/T * t)**(n+1)
 
 def Pn_teo_poisson(t, n, nT, T):
-  return (nT/T*t)**n/np.math.factorial(n) * np.exp(-nT/T*t)
+  return (nT/T*t)**n / np.math.factorial(n) * np.exp(-nT/T*t)
 
-n_mean = 3 #A CHEQUEAR
+def error_formula_poisson(a_0, x, n, T):
+    return (n/(a_0*x/T) -1)*np.exp(-a_0*x/T)*(a_0*x/T)**n/np.math.factorial(n)
+
+
+
+formula_bose_str0 = '1/(1 + a_0/T * x)'
+formula_bose_str1 = '(a_0/T*x) / (1 + a_0/T * x)**2'
+formula_bose_str2 = '(a_0/T*x)**2 / (1 + a_0/T * x)**(3)'
+def formula_bose(a_0, x):
+    return a_0**x/((1+a_0)**(1+x))
+
+
+
+
+n_mean = 3.622 #A CHEQUEAR
+n_std = 0.1714406
 T = 500 #ns
+vent = np.linspace(500, 0, 2500) #ns
 
-fig, axs = plt.subplots(3, sharex=True)
-vent = np.linspace(5e-7, 0, 2500)*1e9 #ns
-axs[0].plot(vent, P0_bose_total/np.max(P0_bose_total), 'o',label='Datos', markevery=70)
-axs[0].plot(vent, Pn_teo_bose(vent, 0, n_mean, T), label='Bose Einstein')
-axs[0].plot(vent, Pn_teo_poisson(vent, 0, n_mean, T), label='Poisson')
-axs[0].set_ylabel('$P_0$')
-axs[0].grid()
-axs[0].legend()
+franja_error0_bose = Propagacion_errores(
+        variables = [('a_0', n_mean), ('T', T)], 
+        errores = np.array([n_std, 0]).reshape(-1,1), 
+        formula = formula_bose_str0, 
+        dominio = vent
+        ).fit()[1]
+franja_error1_bose = Propagacion_errores(
+        variables = [('a_0', n_mean), ('T', T)], 
+        errores = np.array([n_std, 0]).reshape(-1,1), 
+        formula = formula_bose_str1, 
+        dominio = vent
+        ).fit()[1]
+franja_error2_bose = Propagacion_errores(
+        variables = [('a_0', n_mean), ('T', T)], 
+        errores = np.array([n_std, 0]).reshape(-1,1), 
+        formula = formula_bose_str2, 
+        dominio = vent
+        ).fit()[1]
+franja_error0_poisson = np.sqrt((error_formula_poisson(n_mean, vent, 0, T)*n_std)**2)
+franja_error1_poisson = np.sqrt((error_formula_poisson(n_mean, vent, 1, T)*n_std)**2)
+franja_error2_poisson = np.sqrt((error_formula_poisson(n_mean, vent, 2, T)*n_std)**2)
 
-axs[1].plot(vent, P1_bose_total/np.max(P1_bose_total), 'o', markevery=70)
-axs[1].plot(vent, Pn_teo_bose(vent, 1, n_mean, T))
-axs[1].plot(vent, Pn_teo_poisson(vent, 1, n_mean, T))
-axs[1].set_ylabel('$P_1$')
-axs[1].grid()
+# fig, axs = plt.subplots(3, sharex=True)
 
-axs[2].plot(vent, P2_bose_total/np.max(P2_bose_total), 'o', markevery=70)
-axs[2].plot(vent, Pn_teo_bose(vent, 2, n_mean, T))
-axs[2].plot(vent, Pn_teo_poisson(vent, 2, n_mean, T))
-axs[2].set_ylabel('$P_2$')
-axs[2].grid()
-axs[2].set_xlabel('Tamaño de ventana temporal [ns]')
-
+plt.errorbar(vent, P0_bose_total, yerr=error_frecuencia0+P0_bose_total*0.01, fmt='.',label='Datos', markevery=70, errorevery=70, capsize=2, zorder=5)
+plt.plot(vent, Pn_teo_bose(vent, 0, n_mean, T), label='Bose Einstein', color='C1')
+plt.plot(vent, Pn_teo_bose(vent, 0, n_mean, T) + franja_error0_bose, '--', color = 'C1')
+plt.plot(vent, Pn_teo_bose(vent, 0, n_mean, T) - franja_error0_bose, '--', color = 'C1')
+plt.fill_between(vent, Pn_teo_bose(vent, 0, n_mean, T) - franja_error0_bose, Pn_teo_bose(vent, 0, n_mean, T) + franja_error0_bose, facecolor = "gray", alpha = 0.3)
+plt.plot(vent, Pn_teo_poisson(vent, 0, n_mean, T), label='Poisson', color='C2')
+plt.plot(vent, Pn_teo_poisson(vent, 0, n_mean, T) + franja_error0_poisson, '--', color = 'C2')
+plt.plot(vent, Pn_teo_poisson(vent, 0, n_mean, T) - franja_error0_poisson, '--', color = 'C2')
+plt.fill_between(vent, Pn_teo_poisson(vent, 0, n_mean, T) - franja_error0_poisson, Pn_teo_poisson(vent, 0, n_mean, T) + franja_error0_poisson, facecolor = "gray", alpha = 0.3)
+plt.ylabel('Probablidad de 0-fotones')
+plt.xlabel('Tamaño de ventana temporal [ns]')
+plt.grid()
+plt.legend()
 plt.show()
+
+plt.errorbar(vent, P1_bose_total, yerr=error_frecuencia1+P1_bose_total*0.01, fmt='.',label='Datos', markevery=70, errorevery=70, capsize=5, color='C0')
+plt.plot(vent, Pn_teo_bose(vent, 1, n_mean, T), label='Bose Einstein', color='C1')
+plt.plot(vent, Pn_teo_bose(vent, 1, n_mean, T) + franja_error1_bose, '--', color = 'C1')
+plt.plot(vent, Pn_teo_bose(vent, 1, n_mean, T) - franja_error1_bose, '--', color = 'C1')
+plt.fill_between(vent, Pn_teo_bose(vent, 1, n_mean, T) - franja_error1_bose, Pn_teo_bose(vent, 1, n_mean, T) + franja_error1_bose, facecolor = "gray", alpha = 0.3)
+plt.plot(vent, Pn_teo_poisson(vent, 1, n_mean, T), label='Poisson', color='C2')
+plt.plot(vent, Pn_teo_poisson(vent, 1, n_mean, T) + franja_error1_poisson, '--', color = 'C2')
+plt.plot(vent, Pn_teo_poisson(vent, 1, n_mean, T) - franja_error1_poisson, '--', color = 'C2')
+plt.fill_between(vent, Pn_teo_poisson(vent, 1, n_mean, T) - franja_error1_poisson, Pn_teo_poisson(vent, 1, n_mean, T) + franja_error1_poisson, facecolor = "gray", alpha = 0.3)
+plt.ylabel('Probablidad de 1-fotón')
+plt.xlabel('Tamaño de ventana temporal [ns]')
+plt.grid()
+plt.legend()
+plt.show()
+
+plt.errorbar(vent, P2_bose_total, yerr=error_frecuencia2+P2_bose_total*0.01, fmt='.',label='Datos', markevery=70, errorevery=70, capsize=5, color='C0')
+plt.plot(vent, Pn_teo_bose(vent, 2, n_mean, T), label='Bose Einstein', color='C1')
+plt.plot(vent, Pn_teo_bose(vent, 2, n_mean, T) + franja_error2_bose, '--', color = 'C1')
+plt.plot(vent, Pn_teo_bose(vent, 2, n_mean, T) - franja_error2_bose, '--', color = 'C1')
+plt.fill_between(vent, Pn_teo_bose(vent, 2, n_mean, T) - franja_error2_bose, Pn_teo_bose(vent, 2, n_mean, T) + franja_error2_bose, facecolor = "gray", alpha = 0.3)
+plt.plot(vent, Pn_teo_poisson(vent, 2, n_mean, T), label='Poisson', color='C2')
+plt.plot(vent, Pn_teo_poisson(vent, 2, n_mean, T) + franja_error2_poisson, '--', color = 'C2')
+plt.plot(vent, Pn_teo_poisson(vent, 2, n_mean, T) - franja_error2_poisson, '--', color = 'C2')
+plt.fill_between(vent, Pn_teo_poisson(vent, 2, n_mean, T) - franja_error2_poisson, Pn_teo_poisson(vent, 2, n_mean, T) + franja_error2_poisson, facecolor = "gray", alpha = 0.3)
+plt.ylabel('Probablidad de 2-fotones')
+plt.xlabel('Tamaño de ventana temporal [ns]')
+plt.grid()
+plt.legend()
+plt.show()
+
 
 ########################################
 #POISSON
@@ -152,7 +242,7 @@ plt.show()
 
 path_poisson = 'input\\conteo\\poisson(10ms)\\laser_2v'
 
-umbral_poisson = 0.003
+umbral_poisson = 3.1
 P0_poisson_total = np.zeros(2500)
 P1_poisson_total = np.zeros(2500)
 P2_poisson_total = np.zeros(2500)
@@ -189,21 +279,21 @@ T = 100 #ms
 fig, axs = plt.subplots(3, sharex=True)
 vent = np.linspace(T, 0, 2500) #ms
 axs[0].plot(vent, P0_poisson_total/np.max(P0_poisson_total), 'o',label='Datos', markevery=70)
-axs[0].plot(vent, Pn_teo_bose(vent, 0, n_mean, T), label='Bose Einstein')
-axs[0].plot(vent, Pn_teo_poisson(vent, 0, n_mean, T), label='Poisson')
+# axs[0].plot(vent, Pn_teo_bose(vent, 0, n_mean, T), label='Bose Einstein')
+# axs[0].plot(vent, Pn_teo_poisson(vent, 0, n_mean, T), label='Poisson')
 axs[0].set_ylabel('$P_0$')
 axs[0].grid()
 axs[0].legend()
 
 axs[1].plot(vent, P1_poisson_total/np.max(P1_poisson_total), 'o', markevery=70)
-axs[1].plot(vent, Pn_teo_bose(vent, 1, n_mean, T))
-axs[1].plot(vent, Pn_teo_poisson(vent, 1, n_mean, T))
+# axs[1].plot(vent, Pn_teo_bose(vent, 1, n_mean, T))
+# axs[1].plot(vent, Pn_teo_poisson(vent, 1, n_mean, T))
 axs[1].set_ylabel('$P_1$')
 axs[1].grid()
 
 axs[2].plot(vent, P2_poisson_total/np.max(P2_poisson_total), 'o', markevery=70)
-axs[2].plot(vent, Pn_teo_bose(vent, 2, n_mean, T))
-axs[2].plot(vent, Pn_teo_poisson(vent, 2, n_mean, T))
+# axs[2].plot(vent, Pn_teo_bose(vent, 2, n_mean, T))
+# axs[2].plot(vent, Pn_teo_poisson(vent, 2, n_mean, T))
 axs[2].set_ylabel('$P_2$')
 axs[2].grid()
 axs[2].set_xlabel('Tamaño de ventana temporal [ms]')

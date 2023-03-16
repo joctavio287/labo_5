@@ -98,8 +98,8 @@ umbral1 = 1
 umbral2 = 3.1
 plt.figure()
 
-plt.vlines(x = -umbral1, ymin = 0, ymax =100000, label = f'Umbral 1:{-umbral1} V', color = 'C2', linestyles='dashed')
-plt.vlines(x = -umbral2, ymin = 0, ymax =100000, label = f'Umbral 2:{-umbral2} V', color = 'C2', linestyles='dashed')
+plt.vlines(x = -umbral1, ymin = 0, ymax =100000, color = 'C2', linestyles='dashed')
+plt.vlines(x = -umbral2, ymin = 0, ymax =100000, color = 'C2', linestyles='dashed')
 plt.bar(tensiones,
         cuentas,
         color = 'C1', 
@@ -304,14 +304,18 @@ for l in [20,35,60]:
 
     eje_temporal = np.arange(-1250*diferencia_temporal, 1250*diferencia_temporal, diferencia_temporal)
 
-    t_c = np.round(np.abs(1000*eje_temporal[find_nearest_arg(correlacion_promedio, 0.5)]),5)
+    t_c = np.round(np.abs(1000*eje_temporal[find_nearest_arg(correlacion_promedio, 0.5)]), 5)
 
-    plt.plot(eje_temporal, correlacion_promedio, color = color[l])
-    plt.hlines(y = .5, xmin = 0, xmax = t_c/1000, color = color[l], linestyles = 'dashdot',
+    plt.plot(eje_temporal*1000, correlacion_promedio, color = color[l],
                 label = f'Frecuencia = {np.round(definir_frecuencia(l/10),2)} Hz y ' +r'$\tau_c$' + f' = {t_c} ms')
-    plt.xlim(0,0.005)
+    if l ==20:
+        plt.hlines(y = .5, xmin = 0, xmax = t_c, color = color[l], linestyles = 'dashdot')
+    plt.xlim(0,5)
 plt.ylabel('Correlación')
-plt.xlabel(r'$\Delta \tau$ [s]')
+plt.xlabel(r'$\Delta \tau$ [ms]')
 plt.grid(visible = True)
 plt.legend()
 plt.show(block = False)
+# plt.savefig(os.path.join(output_path + os.path.normpath('/presentacion/coherencia_temporal.png')))
+
+# CHI 2

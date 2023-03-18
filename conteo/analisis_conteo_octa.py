@@ -352,6 +352,18 @@ plt.legend()
 plt.show(block = False)
 # plt.savefig(os.path.join(output_path + os.path.normpath('/presentacion/coherencia_temporal.png')))
 
-# CHI 2
-for f in os.listdir(os.path.join(input_path + carpeta)):
-        medicion = load_dict(fname = os.path.join(input_path + carpeta + f))
+
+plt.figure()
+# Datos
+plt.bar(np.arange(0,14,1),
+        formula_poisson(a_0 = 5, x = np.arange(0,14,1)),
+        color = 'C0',
+        width = .5,
+        alpha = 1)
+
+# plt.xticks(cuentas[:,5])
+plt.xlabel('Número de fotones')
+plt.ylabel('Probabilidad')
+plt.grid(visible = True, alpha=0.3)
+plt.show(block = False)
+plt.savefig(os.path.join(output_path + os.path.normpath('/presentacion/bose.png')))

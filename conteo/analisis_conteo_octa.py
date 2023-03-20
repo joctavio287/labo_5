@@ -352,18 +352,48 @@ plt.legend()
 plt.show(block = False)
 # plt.savefig(os.path.join(output_path + os.path.normpath('/presentacion/coherencia_temporal.png')))
 
+#==============================================
+# Probabilidad de medir 0, 1 y 2 fotones: Bosse
+#==============================================
+path_bose = os.path.join(input_path + '\\bose(50ns)\\laser_2v') #Ventana de 500 ns
+umbral_bose = 0.003
 
-plt.figure()
-# Datos
-plt.bar(np.arange(0,14,1),
-        formula_poisson(a_0 = 5, x = np.arange(0,14,1)),
-        color = 'C0',
-        width = .5,
-        alpha = 1)
+# Defino las probabilidades
+ocurrencias = np.zeros((2500, 1000))
 
-# plt.xticks(cuentas[:,5])
-plt.xlabel('Número de fotones')
-plt.ylabel('Probabilidad')
-plt.grid(visible = True, alpha=0.3)
-plt.show(block = False)
-plt.savefig(os.path.join(output_path + os.path.normpath('/presentacion/bose.png')))
+for j, filename in enumerate(os.listdir(path_bose)):
+  data = load_dict(path_bose + '\\' + filename)
+  for i in range(2500):
+    indice_picos = find_peaks(-data['tension'][i:], height = umbral_bose)[0]
+    tension_picos = data['tension'][i:][indice_picos]
+    ocurrencia = len(tension_picos[tension_picos<-umbral_bose])
+    ocurrencias[i,j] = ocurrencia
+
+P0_bose = np.sum(ocurrencias == 0, axis = 1)
+P1_bose = np.sum(ocurrencias == 1, axis = 1)
+P2_bose = np.sum(ocurrencias == 2, axis = 1)
+error_frecuencia0 = np.zeros(2500)
+error_frecuencia1 = np.zeros(2500)
+error_frecuencia2 = np.zeros(2500)
+for i in range(2500):
+  cuentas, apariciones = np.unique(ocurrencias[i,:], return_counts=True)
+  error_suma_apariciones = np.sqrt(np.sum(apariciones))
+  frecuencia = apariciones/np.sum(apariciones)
+  try:
+    error_frecuencia0[i], error_frecuencia1[i], error_frecuencia2[i], *_ = np.sqrt((np.sqrt(apariciones)/np.sum(apariciones))**2 + 
+          (apariciones*error_suma_apariciones/(np.sum(apariciones)**2))**2)
+  except:
+    try:
+      error_frecuencia0[i], error_frecuencia1[i], *_ = np.sqrt((np.sqrt(apariciones)/np.sum(apariciones))**2 + 
+        (apariciones*error_suma_apariciones/(np.sum(apariciones)**2))**2)
+    except:
+      error_frecuencia0[i], *_ = np.sqrt((np.sqrt(apariciones)/np.sum(apariciones))**2 + 
+      (apariciones*error_suma_apariciones/(np.sum(apariciones)**2))**2)
+
+P0_bose_total = P0_bose_total/1000
+P1_bose_total = P1_bose_total/1000
+P2_bose_total = P2_bose_total/1000
+# ocurrencias_total = np.concatenate(ocurrencias_total, axis=1)
+# ocurrencias_total = np.concatenate([np.array(i).reshape(-1, 1) for i in ocurrencias_total], axis=1)
+# occ = np.sum(ocurrencias_total, axis=1)
+

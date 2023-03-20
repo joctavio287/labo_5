@@ -45,7 +45,7 @@ fig, axs = plt.subplots(2, 1, sharex=True)
 
 axs[0].plot(medicion['tension']*1e3, medicion['tiempo']*1e6, linewidth=0.7, label='Señal osciloscopio', color='C0')
 ylim = axs[0].get_ylim()
-axs[0].vlines(umbral*1e3, -1, 1, linestyles='dashed', colors='black', label='Umbral')
+axs[0].vlines(umbral*1e3, -1, 1, linestyles='dashed', colors='C2', label='Umbral')
 axs[0].set_ylim(ylim)
 axs[0].legend(loc='upper left')
 axs[0].set_ylabel('Tiempo [$\mu$s]')
@@ -65,7 +65,7 @@ axs[1].bar(tensiones_ruido*1e3,
         label = 'Ruido')
 axs[1].set_yscale('log')
 ylim = axs[1].get_ylim()
-axs[1].vlines(umbral*1e3, -10, 10e5, linestyles='dashed', colors='black')
+axs[1].vlines(umbral*1e3, -10, 10e5, linestyles='dashed', colors='C2')
 axs[1].legend(loc='upper left')
 axs[1].set_xlabel('Tensión [mV]')
 axs[1].set_ylabel('Número de eventos')
@@ -73,6 +73,47 @@ axs[1].grid(visible = True, alpha=0.3)
 axs[1].set_ylim(ylim)
 plt.savefig('./output/conteo/presentacion/ruido-umbral-ej.png', dpi=400)
 plt.show()
+
+##############################################
+#UMBRAL RUIDO BOSE
+##############################################
+plt.bar(tensiones*1e3,
+        cuentas,
+        color = 'C1', 
+        width= .25,
+        alpha = .75,
+        label = 'Laser incidiendo sobre FM')
+plt.bar(tensiones_ruido*1e3,
+        cuentas_ruido,
+        color = 'C0', 
+        width= .25,
+        alpha = 1,
+        label = 'Ruido')
+plt.yscale('log')
+ylim = axs[1].get_ylim()
+plt.vlines(umbral*1e3, -10, 10e5, linestyles='dashed', colors='C2')
+plt.legend(loc='upper left')
+plt.xlabel('Tensión [mV]')
+plt.ylabel('Número de eventos')
+plt.grid(visible = True, alpha=0.3)
+plt.ylim(ylim)
+plt.savefig('./output/conteo/presentacion/ruido-umbral-bose.png', dpi=400)
+plt.show()
+
+########################################
+## EJEMPLO SUB-VENTANAS
+########################################
+plt.plot(medicion['tiempo']*1e6, medicion['tension']*1e3, linewidth=1, label='Señal osciloscopio', color='C0')
+plt.vlines(medicion['tiempo'][::500]*1e6, min(medicion['tension']*1e3), max(medicion['tension']*1e3), colors='C1', linestyles='dashed', label='Sub-ventanas')
+ylim = axs[0].get_ylim()
+plt.set_ylim(ylim)
+plt.legend(loc='upper right')
+plt.xlabel('Tiempo [$\mu$s]')
+plt.ylabel('Tensión [mV]')
+plt.grid(visible = True, alpha=0.3)
+plt.savefig('./output/conteo/presentacion/ejemplo-subventanas.png', dpi=400)
+plt.show()
+
 
 ########################################
 ## P0, P1, P2
@@ -382,4 +423,96 @@ plt.xlabel('Tamaño de ventana temporal [ms]')
 plt.grid()
 plt.legend()
 plt.savefig('output\\conteo\\presentacion\\P2-poisson-umbral-grande.png', dpi=400)
+plt.show()
+
+###############################
+#GRAFICOS INTRODUCCION PRESENTACION
+###############################
+
+x = np.linspace(0, 3, 1000)
+y1 = np.sin(2*np.pi*x)
+y2 = -y1
+
+plt.plot(x, y1)
+plt.plot(x, y2)
+plt.xticks([0, 1, 2, 3], ['0', '$T$', '$2T$', '$3T$'])
+plt.xlabel('Tiempo')
+plt.ylabel('Amplitud')
+plt.grid()
+plt.savefig('output\\conteo\\presentacion\\grafico-intro-1.png', dpi=400)
+plt.show()
+
+x = np.linspace(0, 10, 1000)
+y1 = np.sin(2*np.pi*x+1)
+y2 = np.sin(2*np.pi*x+x*np.pi/4)
+plt.plot(x, y1)
+plt.plot(x, y2)
+plt.vlines(6.71, -1, 1)
+plt.xlabel('Tiempo')
+plt.ylabel('Amplitud')
+plt.grid()
+plt.show()
+
+def formula_poisson(a_0, x):
+    funcion = []
+    for n in x:
+        funcion.append(np.exp(-a_0)*a_0**n/np.math.factorial(n))
+    return np.array(funcion)
+
+n = np.linspace(0, 10, 100)
+x, y = np.unique(formula_poisson(20, n), return_counts=True)
+
+plt.bar(x, y)
+plt.plot()
+
+
+###############################
+#Caracterizacion resistencias-ancho de picos
+###############################
+
+path = 'input\\conteo\\ancho_resistencia_picos'
+
+for filename in os.listdir(path):
+  data = load_dict(path + '\\' + filename)
+  plt.figure(figsize=(6.4*2, 4.8*2))
+  V = data['tension']
+  t = data['tiempo']
+  R = filename.split('_')[2]
+  plt.plot(t*1e9, V*1e3, '.-', label='R = '+R+'$\\Omega$', markevery=10)
+  plt.xlabel('Tiempo [ns]', fontsize=30)
+  plt.ylabel('Voltaje [mV]', fontsize=30)
+  plt.xticks(fontsize=25)
+  plt.yticks(fontsize=25)
+  plt.grid()
+  # plt.legend(loc='lower left', prop={'size': 15})
+  # plt.savefig(f'output/conteo/ancho_resistencia_{R}.svg')
+  plt.show()
+
+#Grafico 50 y 22k juntos
+
+data_50 = load_dict(path + '\\ancho_resistencia_50_ohms.pkl')
+data_22k = load_dict(path + '\\ancho_resistencia_22k_ohms.pkl')
+
+V_50 = data_50['tension']
+t_50 = data_50['tiempo']
+
+V_22k = data_22k['tension']
+t_22k = data_22k['tiempo']
+
+fig, axs = plt.subplots(2,1)
+
+axs[0].plot(t_50*1e9, V_50*1e3, '.-', color='C0', label='R = 50 $\\Omega$', markevery=10)
+axs[0].set_xlabel('Tiempo [ns]')
+axs[0].set_ylabel('Voltaje [mV]')
+axs[0].legend()
+axs[0].grid()
+
+axs[1].plot(t_22k*1e6, V_22k*1e3, '.-', color='C1', label='R = 22 k$\\Omega$', markevery=10)
+axs[1].set_xlabel('Tiempo [ms]')
+axs[1].set_ylabel('Voltaje [mV]')
+axs[1].legend()
+axs[1].grid()
+
+plt.tight_layout()
+plt.savefig('output/conteo/ancho_resistencia_50_22k.svg')
 plt.show()

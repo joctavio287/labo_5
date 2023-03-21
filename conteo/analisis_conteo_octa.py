@@ -124,7 +124,7 @@ plt.legend()
 # plt.savefig(os.path.join(output_path + os.path.normpath('/presentacion/umbral_grande.png')))
 
 # Levantamos la estadística habiendo fijado el umbral
-umbral = umbral1
+# umbral = umbral1
 umbral = umbral2
 
 carpeta = '/poisson(10ms)/laser_2v_bis_2/'
@@ -225,7 +225,7 @@ tensiones_ruido, cuentas_ruido = np.unique(tensiones_ruido, return_counts = True
 
 
 # Graficamos definiendo un umbral
-umbral = 0.003 #tensiones_ruido.mean() - 3*np.std(tensiones_ruido)
+umbral = 0.0045 #tensiones_ruido.mean() - 3*np.std(tensiones_ruido)
 
 plt.figure()
 plt.vlines(x = -umbral, ymin = 0, ymax =1000, label = f'Umbral:{-umbral} V', color = 'C2', linestyles='dashed')
@@ -421,7 +421,7 @@ for f in os.listdir(os.path.join(input_path + carpeta)):
 tensiones, cuentas = np.unique(tensiones, return_counts = True)
 
 # Fijo el umbral y grafico
-umbral = -0.003
+umbral = -0.0045
 
 fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex=True)
 

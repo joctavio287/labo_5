@@ -448,12 +448,16 @@ axs[1].bar(tensiones*1e3,
         width= .15,
         alpha = .75,
         label = 'Laser incidiendo sobre FM')
+axs[1].errorbar(tensiones*1e3, cuentas, yerr = np.sqrt(cuentas), marker = '.', alpha = .5, fmt = 'None', capsize = 1.5, color = 'black')
+
 axs[1].bar(tensiones_ruido*1e3,
         cuentas_ruido,
         color = 'C0', 
         width= .15,
         alpha = 1,
         label = 'Ruido')
+axs[1].errorbar(tensiones_ruido*1e3, cuentas_ruido, yerr = np.sqrt(cuentas_ruido), marker = '.', alpha = .5, fmt = 'None', capsize = 1.5, color = 'black')
+
 axs[1].vlines(umbral*1e3, 
               ymin = -10, 
               ymax = 10e5, 
@@ -466,7 +470,7 @@ axs[1].set_ylabel('Número de eventos')
 axs[1].grid(visible = True, alpha=0.3)
 axs[1].set_ylim(0, cuentas_ruido.max())
 # fig.savefig(os.path.join(output_path + os.path.normpath('/umbral_bose.svg')))
-fig.show(block = False)
+fig.show()
 
 # Poisson
 
@@ -491,25 +495,27 @@ tensiones, cuentas = np.unique(tensiones, return_counts = True)
 umbral = -0.003
 
 plt.figure()
-plt.plot()
 
 plt.bar(tensiones,
         cuentas,
         color = 'C1', 
-        width= .045,
+        width= .0545,
         alpha = 1,
         label = 'Laser incidiendo sobre FM',
         zorder = 0,
         # edgecolor = 'black'
         )
+plt.errorbar(tensiones, cuentas, yerr = np.sqrt(cuentas), marker = '.', alpha = .5, fmt = 'None', capsize = 1.5, color = 'black')
+
 plt.bar(tensiones_ruido,
         cuentas_ruido,
         color = 'C0', 
-        width= .045,
+        width= .0545,
         alpha = 1,
         label = 'Ruido',
         zorder = 1
         )
+plt.errorbar(tensiones_ruido, cuentas_ruido, yerr = np.sqrt(cuentas_ruido), marker = '.', alpha = .5, fmt = 'None', capsize = 1.5, color = 'black')
 plt.vlines(-3.1, 
               ymin =  -10, 
               ymax = 10e5, 

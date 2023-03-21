@@ -510,17 +510,11 @@ plt.bar(tensiones_ruido,
         label = 'Ruido',
         zorder = 1
         )
-plt.vlines(-1, 
-              ymin = -10, 
-              ymax = 10e5, 
-              linestyles='dashed', 
-              colors='C2',
-              label='Umbral: -1 V')
 plt.vlines(-3.1, 
               ymin =  -10, 
               ymax = 10e5, 
               linestyles='dashed', 
-              colors='C3', 
+              colors='C2', 
               label='Umbral: -3,1 V')
 plt.legend(loc='upper left')
 plt.yscale('log')

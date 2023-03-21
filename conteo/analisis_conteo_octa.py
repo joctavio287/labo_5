@@ -170,7 +170,7 @@ plt.errorbar(cuentas, frecuencia, yerr = error_frecuencia, fmt = 'o', capsize = 
 
 # Ajuste
 plt.plot(cuentas, formula_poisson(media, cuentas), color = 'C2')
-plt.errorbar(cuentas, formula_poisson(media, cuentas), yerr = franja_error, marker = 'o', capsize = 1.5, color = 'C2', label = 'Ajuste')
+plt.errorbar(cuentas, formula_poisson(media, cuentas), yerr = franja_error, marker = 'o', capsize = 1.5, color = 'C2', label = 'Ajuste Poisson')
 plt.xticks(cuentas)
 plt.xlabel('Número de fotones')
 plt.ylabel('Probabilidad')
@@ -292,7 +292,7 @@ plt.errorbar(cuentas, frecuencia, yerr = error_frecuencia + frecuencia*0.01, fmt
 
 # Ajuste
 plt.plot(cuentas, formula_bose(media, cuentas), color = 'C2')
-plt.errorbar(cuentas, formula_bose(media, cuentas), yerr = franja_error, marker = 'o', capsize = 1.5, color = 'C2', label = 'Ajuste')
+plt.errorbar(cuentas, formula_bose(media, cuentas), yerr = franja_error, marker = 'o', capsize = 1.5, color = 'C2', label = 'Ajuste Bose-Einstein')
 
 plt.xticks(cuentas[:,5])
 plt.xlabel('Número de fotones')
@@ -300,7 +300,7 @@ plt.ylabel('Probabilidad')
 plt.grid(visible = True, alpha=0.3)
 plt.legend()
 plt.show(block = False)
-# plt.savefig(os.path.join(output_path + os.path.normpath('/presentacion/distribucion_bose.png')))
+# plt.savefig(os.path.join(output_path + os.path.normpath('distribucion_bose.svg')))
 
 
 # Coeficiente de determinación 1 - sigma_r**2/sigma_y**2

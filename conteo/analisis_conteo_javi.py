@@ -516,3 +516,39 @@ axs[1].grid()
 plt.tight_layout()
 plt.savefig('output/conteo/ancho_resistencia_50_22k.svg')
 plt.show()
+
+###############################
+#Tiempo de coherencia
+###############################
+
+path = 'input\\conteo\\correlacion_frecuencia'
+
+t_cs = []
+frecs = []
+for l in range(20, 65, 5):
+    carpeta = f'/correlacion_frecuencia/correlacion_{l}e-1v_0_ohms/'
+    correlaciones = []
+    normalizaciones = []
+    for f in os.listdir(os.path.join(input_path + carpeta)):
+        medicion = load_dict(fname = os.path.join(input_path + carpeta + f))
+        tension = -medicion['tension'] + (medicion['tension']).max()
+        correlacion = np.correlate(tension, tension, mode ='same')
+        normalizaciones.append(np.correlate(tension, tension))
+        correlaciones.append(correlacion.reshape(-1,1))
+
+    normalizacion = np.mean(normalizaciones)
+    correlacion_promedio = np.mean(np.array(correlaciones), axis =0)/normalizacion
+    diferencia_temporal = medicion['diferencia_temporal']
+
+    eje_temporal = np.arange(-1250*diferencia_temporal, 1250*diferencia_temporal, diferencia_temporal)
+
+    t_c = np.round(np.abs(1000*eje_temporal[find_nearest_arg(correlacion_promedio, 0.5)]), 5)
+    frecs.append(definir_frecuencia(l/10))
+    t_cs.append(t_c)
+
+plt.plot(frecs, t_cs, 'o')
+plt.xlabel('Frecuencia [Hz]')
+plt.ylabel('Tiempo de coherencia [ms]')
+plt.grid()
+plt.savefig('output/conteo/frecuencia-vs-coherencia.svg')
+plt.show()

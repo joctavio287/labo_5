@@ -125,7 +125,7 @@ plt.legend()
 
 # Levantamos la estadística habiendo fijado el umbral
 umbral = umbral1
-# umbral = umbral2
+umbral = umbral2
 
 carpeta = '/poisson(10ms)/laser_2v_bis_2/'
 ocurrencias = []
@@ -177,8 +177,8 @@ plt.ylabel('Probabilidad')
 plt.grid(visible = True, alpha=0.3)
 plt.legend()
 plt.show(block = False)
-# plt.savefig(os.path.join(output_path + os.path.normpath('/presentacion/distribucion_poisson_umbral_chico.png')))
-# plt.savefig(os.path.join(output_path + os.path.normpath('/presentacion/distribucion_poisson_umbral_grande.png')))
+# plt.savefig(os.path.join(output_path + os.path.normpath('/distribucion_poisson_umbral_chico.svg')))
+# plt.savefig(os.path.join(output_path + os.path.normpath('/distribucion_poisson_umbral_grande.svg')))
 
 # Coeficiente de determinación 1 - sigma_r**2/sigma_y**2
 sigma_r = frecuencia - formula_bose(media, cuentas)
@@ -530,3 +530,5 @@ plt.grid(visible = True, alpha=0.3)
 plt.ylim(0, cuentas_ruido.max())
 # plt.savefig(os.path.join(output_path + os.path.normpath('/umbral_poisson.svg')))
 plt.show(block = False)
+
+# ==========================================================

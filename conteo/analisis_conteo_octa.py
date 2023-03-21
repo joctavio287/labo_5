@@ -397,3 +397,136 @@ P2_bose_total = P2_bose_total/1000
 # ocurrencias_total = np.concatenate([np.array(i).reshape(-1, 1) for i in ocurrencias_total], axis=1)
 # occ = np.sum(ocurrencias_total, axis=1)
 
+# ==========================================================================
+# Grafico umbrales de detección con señal para Bose y sin señal para Poisson
+# ==========================================================================
+
+# Bose
+
+# Levanto los datos del ruido y del laser
+tensiones_ruido = []
+carpeta = os.path.normpath('/bose(50ns)/ruido_2v/')
+for f in os.listdir(os.path.join(input_path + carpeta)):
+    medicion = load_dict(fname = os.path.join(input_path + carpeta + '/' + f))
+    for t in medicion['tension_picos']:
+        tensiones_ruido.append(t)
+tensiones_ruido, cuentas_ruido = np.unique(tensiones_ruido, return_counts = True)
+
+tensiones = []
+carpeta = os.path.normpath('/bose(50ns)/laser_2v/')
+for f in os.listdir(os.path.join(input_path + carpeta)):
+    medicion = load_dict(fname = os.path.join(input_path + carpeta + '/' + f))
+    for t in medicion['tension_picos']:
+        tensiones.append(t)
+tensiones, cuentas = np.unique(tensiones, return_counts = True)
+
+# Fijo el umbral y grafico
+umbral = -0.003
+
+fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex=True)
+
+axs[0].plot(medicion['tension']*1e3, 
+            medicion['tiempo']*1e6, 
+            linewidth=0.7, 
+            label='Señal osciloscopio', 
+            color='C0')
+axs[0].vlines(umbral*1e3, 
+              ymin =  -1, 
+              ymax = 1, 
+              linestyles='dashed', 
+              colors='C2', 
+              label='Umbral: -3 mV')
+# ylim = axs[0].get_ylim()
+axs[0].set_ylim((medicion['tiempo']*1e6)[0], (medicion['tiempo']*1e6)[-1])
+axs[0].legend(loc='upper left')
+axs[0].set_ylabel('Tiempo [$\mu$s]')
+axs[0].grid(visible = True, alpha=0.3)
+
+axs[1].bar(tensiones*1e3,
+        cuentas,
+        color = 'C1', 
+        width= .15,
+        alpha = .75,
+        label = 'Laser incidiendo sobre FM')
+axs[1].bar(tensiones_ruido*1e3,
+        cuentas_ruido,
+        color = 'C0', 
+        width= .15,
+        alpha = 1,
+        label = 'Ruido')
+axs[1].vlines(umbral*1e3, 
+              ymin = -10, 
+              ymax = 10e5, 
+              linestyles='dashed', 
+              colors='C2')
+axs[1].legend(loc='upper left')
+axs[1].set_yscale('log')
+axs[1].set_xlabel('Tensión [mV]')
+axs[1].set_ylabel('Número de eventos')
+axs[1].grid(visible = True, alpha=0.3)
+axs[1].set_ylim(0, cuentas_ruido.max())
+# fig.savefig(os.path.join(output_path + os.path.normpath('/umbral_bose.svg')))
+fig.show(block = False)
+
+# Poisson
+
+# Levanto los datos del ruido y del laser
+tensiones_ruido = []
+carpeta = os.path.normpath('/poisson(10ms)/ruido_2v/')
+for f in os.listdir(os.path.join(input_path + carpeta)):
+    medicion = load_dict(fname = os.path.join(input_path + carpeta + '/' + f))
+    for t in medicion['tension_picos']:
+        tensiones_ruido.append(t)
+tensiones_ruido, cuentas_ruido = np.unique(tensiones_ruido, return_counts = True)
+
+tensiones = []
+carpeta = os.path.normpath('/poisson(10ms)/laser_2v_bis_2/')
+for f in os.listdir(os.path.join(input_path + carpeta)):
+    medicion = load_dict(fname = os.path.join(input_path + carpeta + '/' + f))
+    for t in medicion['tension_picos']:
+        tensiones.append(t)
+tensiones, cuentas = np.unique(tensiones, return_counts = True)
+
+# Fijo el umbral y grafico
+umbral = -0.003
+
+plt.figure()
+plt.plot()
+
+plt.bar(tensiones,
+        cuentas,
+        color = 'C1', 
+        width= .045,
+        alpha = 1,
+        label = 'Laser incidiendo sobre FM',
+        zorder = 0,
+        # edgecolor = 'black'
+        )
+plt.bar(tensiones_ruido,
+        cuentas_ruido,
+        color = 'C0', 
+        width= .045,
+        alpha = 1,
+        label = 'Ruido',
+        zorder = 1
+        )
+plt.vlines(-1, 
+              ymin = -10, 
+              ymax = 10e5, 
+              linestyles='dashed', 
+              colors='C2',
+              label='Umbral: -1 V')
+plt.vlines(-3.1, 
+              ymin =  -10, 
+              ymax = 10e5, 
+              linestyles='dashed', 
+              colors='C3', 
+              label='Umbral: -3,1 V')
+plt.legend(loc='upper left')
+plt.yscale('log')
+plt.xlabel('Tensión [V]')
+plt.ylabel('Número de eventos')
+plt.grid(visible = True, alpha=0.3)
+plt.ylim(0, cuentas_ruido.max())
+# plt.savefig(os.path.join(output_path + os.path.normpath('/umbral_poisson.svg')))
+plt.show(block = False)

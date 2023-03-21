@@ -300,7 +300,7 @@ plt.ylabel('Probabilidad')
 plt.grid(visible = True, alpha=0.3)
 plt.legend()
 plt.show(block = False)
-# plt.savefig(os.path.join(output_path + os.path.normpath('distribucion_bose.svg')))
+# plt.savefig(os.path.join(output_path + os.path.normpath('/distribucion_bose.svg')))
 
 
 # Coeficiente de determinación 1 - sigma_r**2/sigma_y**2

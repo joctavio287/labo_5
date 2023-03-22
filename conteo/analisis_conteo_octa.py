@@ -435,7 +435,7 @@ axs[0].vlines(umbral*1e3,
               ymax = 1, 
               linestyles='dashed', 
               colors='C2', 
-              label='Umbral: -3 mV')
+              label='Umbral: -4,5 mV')
 # ylim = axs[0].get_ylim()
 axs[0].set_ylim((medicion['tiempo']*1e6)[0], (medicion['tiempo']*1e6)[-1])
 axs[0].legend(loc='upper left')

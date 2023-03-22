@@ -487,6 +487,121 @@ fig.show()
 # fig.savefig(os.path.join(output_path + os.path.normpath('/p012_bose.svg')))
 # plt.show(block = False)
 
+#================================================
+# Probabilidad de medir 0, 1 y 2 fotones: Poisson
+#================================================
+path_bose = os.path.join(input_path + '\\poisson(10ms)\\laser_2v_bis_2') #Ventana de 500 ns
+umbral_bose = 3.1
+
+# Defino las ocurrencias de cada medición para cada ventana (1000 mediciones x cada ventana)
+ocurrencias = np.zeros((2500, 1000))
+
+for j, filename in enumerate(os.listdir(path_bose)):
+  data = load_dict(path_bose + '\\' + filename)
+  for i in range(2500):
+    indice_picos = find_peaks(-data['tension'][i:], height = umbral_bose)[0]
+    tension_picos = data['tension'][i:][indice_picos]
+    ocurrencia = len(tension_picos[tension_picos<-umbral_bose])
+    ocurrencias[i,j] = ocurrencia
+
+# Ahora las probabilidades
+P0_poisson = np.sum(ocurrencias == 0, axis = 1)/1000
+P1_poisson = np.sum(ocurrencias == 1, axis = 1)/1000
+P2_poisson = np.sum(ocurrencias == 2, axis = 1)/1000
+
+error_probabilidad0 = np.sqrt((np.sqrt(P0_poisson*1000)/1000)**2 + (P0_poisson*1000*np.sqrt(1000)/(1000**2))**2)
+error_probabilidad1 = np.sqrt((np.sqrt(P1_poisson*1000)/1000)**2 + (P1_poisson*1000*np.sqrt(1000)/(1000**2))**2)
+error_probabilidad2 = np.sqrt((np.sqrt(P2_poisson*1000)/1000)**2 + (P2_poisson*1000*np.sqrt(1000)/(1000**2))**2)
+
+
+n_mean = 0.8021739 #20.06304 
+n_std = 0.05725898 #0.9861
+T = 100 #ms
+vent = np.linspace(100, 0, 2500) #ms
+
+franja_error0_bose = Propagacion_errores(
+        variables = [('a_0', n_mean), ('T', T)], 
+        errores = np.array([n_std, 0]).reshape(-1,1), 
+        formula = formula_bose_str0, 
+        dominio = vent
+        ).fit()[1]
+franja_error1_bose = Propagacion_errores(
+        variables = [('a_0', n_mean), ('T', T)], 
+        errores = np.array([n_std, 0]).reshape(-1,1), 
+        formula = formula_bose_str1, 
+        dominio = vent
+        ).fit()[1]
+franja_error2_bose = Propagacion_errores(
+        variables = [('a_0', n_mean), ('T', T)], 
+        errores = np.array([n_std, 0]).reshape(-1,1), 
+        formula = formula_bose_str2, 
+        dominio = vent
+        ).fit()[1]
+franja_error0_poisson = np.sqrt((error_formula_poisson(n_mean, vent, 0, T)*n_std)**2)
+franja_error1_poisson = np.sqrt((error_formula_poisson(n_mean, vent, 1, T)*n_std)**2)
+franja_error2_poisson = np.sqrt((error_formula_poisson(n_mean, vent, 2, T)*n_std)**2)
+
+
+# fig, axs = plt.subplots(3, sharex=True)
+# plt.figure()
+fig, ax = plt.subplots(nrows=3, ncols = 1, sharex = True, figsize = (6,8))
+ax[0].errorbar(vent, P0_poisson, yerr=error_probabilidad0+P0_poisson*0.01, fmt='.',label='Datos', markevery=70, errorevery=70, capsize=2, zorder=5)
+ax[0].plot(vent, Pn_teo_bose(vent, 0, n_mean, T), label='Ajuste Bose-Einstein', color='C1')
+ax[0].plot(vent, Pn_teo_bose(vent, 0, n_mean, T) + franja_error0_bose, '--', color = 'C1')
+ax[0].plot(vent, Pn_teo_bose(vent, 0, n_mean, T) - franja_error0_bose, '--', color = 'C1')
+ax[0].fill_between(vent, Pn_teo_bose(vent, 0, n_mean, T) - franja_error0_bose, Pn_teo_bose(vent, 0, n_mean, T) + franja_error0_bose, facecolor = "gray", alpha = 0.3)
+ax[0].plot(vent, Pn_teo_poisson(vent, 0, n_mean, T), label='Ajuste Poisson', color='C2')
+ax[0].plot(vent, Pn_teo_poisson(vent, 0, n_mean, T) + franja_error0_poisson, '--', color = 'C2')
+ax[0].plot(vent, Pn_teo_poisson(vent, 0, n_mean, T) - franja_error0_poisson, '--', color = 'C2')
+ax[0].fill_between(vent, Pn_teo_poisson(vent, 0, n_mean, T) - franja_error0_poisson, Pn_teo_poisson(vent, 0, n_mean, T) + franja_error0_poisson, facecolor = "gray", alpha = 0.3)
+ax[0].set_ylabel('Probablidad de 0-fotones')
+# ax[0].xlabel('Tamaño de ventana temporal [ns]')
+ax[0].grid()
+ax[0].legend()
+# plt.savefig('output\\conteo\\presentacion\\P0-poisson.png', dpi=400)
+# plt.show(block = False)
+
+# plt.figure()
+ax[1].errorbar(vent, P1_poisson, yerr=error_probabilidad1+P1_poisson*0.01, fmt='.',label='Datos', markevery=70, errorevery=70, capsize=5, color='C0')
+ax[1].plot(vent, Pn_teo_bose(vent, 1, n_mean, T), label='Ajuste Bose-Einstein', color='C1')
+ax[1].plot(vent, Pn_teo_bose(vent, 1, n_mean, T) + franja_error1_bose, '--', color = 'C1')
+ax[1].plot(vent, Pn_teo_bose(vent, 1, n_mean, T) - franja_error1_bose, '--', color = 'C1')
+ax[1].fill_between(vent, Pn_teo_bose(vent, 1, n_mean, T) - franja_error1_bose, Pn_teo_bose(vent, 1, n_mean, T) + franja_error1_bose, facecolor = "gray", alpha = 0.3)
+ax[1].plot(vent, Pn_teo_poisson(vent, 1, n_mean, T), label='Ajuste Poisson', color='C2')
+ax[1].plot(vent, Pn_teo_poisson(vent, 1, n_mean, T) + franja_error1_poisson, '--', color = 'C2')
+ax[1].plot(vent, Pn_teo_poisson(vent, 1, n_mean, T) - franja_error1_poisson, '--', color = 'C2')
+ax[1].fill_between(vent, Pn_teo_poisson(vent, 1, n_mean, T) - franja_error1_poisson, Pn_teo_poisson(vent, 1, n_mean, T) + franja_error1_poisson, facecolor = "gray", alpha = 0.3)
+ax[1].set_ylabel('Probablidad de 1-fotón')
+# ax[1].xlabel('Tamaño de ventana temporal [ns]')
+ax[1].grid()
+ax[1].legend()
+# plt.savefig('output\\conteo\\presentacion\\P1-poisson.png', dpi=400)
+# plt.show(block = False)
+
+# plt.figure()
+ax[2].errorbar(vent, P2_poisson, yerr=error_probabilidad2+P2_poisson*0.01, fmt='.',label='Datos', markevery=70, errorevery=70, capsize=5, color='C0')
+ax[2].plot(vent, Pn_teo_bose(vent, 2, n_mean, T), label='Ajuste Bose-Einstein', color='C1')
+ax[2].plot(vent, Pn_teo_bose(vent, 2, n_mean, T) + franja_error2_bose, '--', color = 'C1')
+ax[2].plot(vent, Pn_teo_bose(vent, 2, n_mean, T) - franja_error2_bose, '--', color = 'C1')
+ax[2].fill_between(vent, Pn_teo_bose(vent, 2, n_mean, T) - franja_error2_bose, Pn_teo_bose(vent, 2, n_mean, T) + franja_error2_bose, facecolor = "gray", alpha = 0.3)
+ax[2].plot(vent, Pn_teo_poisson(vent, 2, n_mean, T), label='Ajuste Poisson', color='C2')
+ax[2].plot(vent, Pn_teo_poisson(vent, 2, n_mean, T) + franja_error2_poisson, '--', color = 'C2')
+ax[2].plot(vent, Pn_teo_poisson(vent, 2, n_mean, T) - franja_error2_poisson, '--', color = 'C2')
+ax[2].fill_between(vent, Pn_teo_poisson(vent, 2, n_mean, T) - franja_error2_poisson, Pn_teo_poisson(vent, 2, n_mean, T) + franja_error2_poisson, facecolor = "gray", alpha = 0.3)
+ax[2].set_ylabel('Probablidad de 2-fotones')
+ax[2].set_xlabel('Tamaño de ventana temporal [ms]')
+ax[2].grid()
+ax[2].legend()
+# fig.tight_layout()
+fig.subplots_adjust( 
+left  = 0.125,  # the left side of the subplots of the figure
+right = 0.95,    # the right side of the subplots of the figure, as a fraction of the figure width
+bottom = 0.1,   # the bottom of the subplots of the figure
+top = 0.99,      # the top of the subplots of the figure
+wspace = .15,   # the amount of width reserved for blank space between subplots
+hspace = .15) 
+fig.show()
+# fig.savefig(os.path.join(output_path + os.path.normpath('/p012_poisson.svg')))
 
 
 # ==========================================================================

@@ -206,8 +206,8 @@ def formula_bose(a_0, x):
 
 
 
-n_mean = 3.622 #A CHEQUEAR
-n_std = 0.1714406
+n_mean = 2.632 #A CHEQUEAR
+n_std = 0.1302
 T = 500 #ns
 vent = np.linspace(500, 0, 2500) #ns
 
